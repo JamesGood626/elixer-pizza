@@ -19,7 +19,7 @@ defmodule Backend.MixProject do
   def application do
     [
       mod: {Backend.Application, []},
-      extra_applications: [:logger, :runtime_tools]
+      extra_applications: [:logger, :runtime_tools, :accounts]
     ]
   end
 
@@ -38,7 +38,9 @@ defmodule Backend.MixProject do
       {:phoenix_live_reload, "~> 1.2", only: :dev},
       {:gettext, "~> 0.11"},
       {:jason, "~> 1.0"},
-      {:plug_cowboy, "~> 2.0"}
+      {:plug_cowboy, "~> 2.0"},
+      {:accounts, path: "../accounts"}
+      # {:pizzas, path: "../pizzas", compile: false}
     ]
   end
 end

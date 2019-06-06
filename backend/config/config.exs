@@ -22,6 +22,34 @@ config :logger, :console,
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
 
+## JUST SPENT SOOOOOO FUCKING LONG TRYING TO FIGURE OUT
+# WHY THE DAMN ACCOUNTS AND PIZZAS APPS WOULDN'T START.
+# Reason:
+# Despite the accounts and pizzas mix projects having already been run through mix release
+# and having their own app file. When the phoenix backend project is started w/ mix phx.server
+# The accounts and pizzas projects' Application module's start function is executed, but their
+# configuration files aren't used for connecting their Repos to their respective databases.
+# YOU MUST ADD THE DATABASE CONFIGURATION INSIDE OF THE PHOENIX PROJECT'S config files.
+
+# NOTE:
+# I have yet to actually execute either Accounts.Repo or Pizzas.Repo from the phoenix server instance.
+# That will be the next step to determine whether this is truly the solution.
+
+# IMPROVEMENTS:
+# Since there will only be one database necessary. It is superfluous to include Ecto in both the Accounts and Pizzas
+# projects. Create a third mix project to serve as a dependency for Accounts and Pizzas.
+# COROLLARY -> With this change, then the new project will be a mix dependency of the Accounts and Pizzas projects; therefore,
+# You may keep their configuration files as is, because it will conform to the explanation of REASON above.
+config :accounts, ecto_repos: [Accounts.Repo]
+
+config :accounts, Accounts.Repo,
+  adapter: Ecto.Adapters.Posgres,
+  database: "pizzadb",
+  username: "jamesgood",
+  password: "postgres",
+  hostname: "localhost",
+  pool_size: 10
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{Mix.env()}.exs"
