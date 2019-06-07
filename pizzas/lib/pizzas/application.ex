@@ -6,6 +6,7 @@ defmodule Pizzas.Application do
   use Application
 
   def start(_type, _args) do
+    IO.puts("pizzas Application start/2 called")
     # List all child processes to be supervised
     children = [
       # Starts a worker by calling: Pizzas.Worker.start_link(arg)

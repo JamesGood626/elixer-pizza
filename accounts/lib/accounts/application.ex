@@ -6,6 +6,8 @@ defmodule Accounts.Application do
   use Application
 
   def start(_type, _args) do
+    IO.puts("accounts Application start/2 called")
+    IO.inspect(System.get_env("MIX_ENV"))
     # List all child processes to be supervised
     children = [
       # Starts a worker by calling: Accounts.Worker.start_link(arg)
