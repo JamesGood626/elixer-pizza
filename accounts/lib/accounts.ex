@@ -16,8 +16,8 @@ defmodule Accounts do
     :world
   end
 
-  alias Accounts.Repo
-  alias Accounts.User
+  alias Dbstore.Repo
+  alias Dbstore.User
 
   def create_user(username),
     do: Repo.insert!(%User{username: username, password_hash: "test_test"})

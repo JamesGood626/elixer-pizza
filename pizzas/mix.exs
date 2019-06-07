@@ -14,7 +14,7 @@ defmodule Pizzas.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      extra_applications: [:logger],
+      extra_applications: [:logger, :dbstore],
       mod: {Pizzas.Application, []}
     ]
   end
@@ -23,8 +23,7 @@ defmodule Pizzas.MixProject do
   defp deps do
     [
       {:distillery, "~> 2.0"},
-      {:ecto_sql, "~> 3.0"},
-      {:postgrex, ">= 0.0.0"}
+      {:dbstore, path: "../dbstore"}
     ]
   end
 end

@@ -1,4 +1,4 @@
-defmodule Accounts.User do
+defmodule Dbstore.User do
   use Ecto.Schema
   # use Ecto.Changeset
 
@@ -8,7 +8,7 @@ defmodule Accounts.User do
     field(:password_hash, :string)
     timestamps()
 
-    many_to_many(:permissions, Accounts.Permissions, join_through: "user_permissions")
+    many_to_many(:permissions, Dbstore.Permissions, join_through: "user_permissions")
   end
 
   # def changeset(user, params \\ %{}) do

@@ -1,9 +1,9 @@
-defmodule Accounts.MixProject do
+defmodule Dbstore.MixProject do
   use Mix.Project
 
   def project do
     [
-      app: :accounts,
+      app: :dbstore,
       version: "0.1.0",
       elixir: "~> 1.8",
       start_permanent: Mix.env() == :prod,
@@ -14,8 +14,8 @@ defmodule Accounts.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      extra_applications: [:logger, :dbstore],
-      mod: {Accounts.Application, []}
+      extra_applications: [:logger],
+      mod: {Dbstore.Application, []}
     ]
   end
 
@@ -23,7 +23,8 @@ defmodule Accounts.MixProject do
   defp deps do
     [
       {:distillery, "~> 2.0"},
-      {:dbstore, path: "../dbstore"}
+      {:ecto_sql, "~> 3.0"},
+      {:postgrex, ">= 0.0.0"}
     ]
   end
 end

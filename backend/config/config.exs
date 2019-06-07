@@ -40,15 +40,23 @@ config :phoenix, :json_library, Jason
 # projects. Create a third mix project to serve as a dependency for Accounts and Pizzas.
 # COROLLARY -> With this change, then the new project will be a mix dependency of the Accounts and Pizzas projects; therefore,
 # You may keep their configuration files as is, because it will conform to the explanation of REASON above.
-config :accounts, ecto_repos: [Accounts.Repo]
 
-config :accounts, Accounts.Repo,
-  adapter: Ecto.Adapters.Posgres,
-  database: "pizzadb",
-  username: "jamesgood",
-  password: "postgres",
-  hostname: "localhost",
-  pool_size: 10
+# RUNNING ONE LAST TEST BEFORE I CONFIRM MY SUSPICIONS (**):
+# So when adding the Dbstore (The project which contains the Ecto Repo)
+# I assumed that putting the db connection info in the config files of the projects that directly import
+# the Dbstore project into their mixfile would be satisfactory for establishing db connection upon mix phx.server start.
+
+# However, it seems as though irregardless of the Dbstore being a direct dependency of the accounts project, that the
+# db config info still needs to be inside of the top level phoenix project in order to establish db connection.
+
+# (**) CONFIRMED, THIS IS THE BEHAVIOR.
+# this is the error message (so you may include it in blog post)
+# ** (RuntimeError) connect raised KeyError exception: key :database not found.
+# The exception details are hidden, as they may contain sensitive data such as database
+# credentials. You may set :show_sensitive_data_on_connection_error to true when starting
+# your connection if you wish to see all of the details
+
+config :dbstore, ecto_repos: [Dbstore.Repo]
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

@@ -1,6 +1,6 @@
 use Mix.Config
 
-config :pizzas, Pizzas.Repo,
+config :dbstore, Dbstore.Repo,
   adapter: Ecto.Adapters.Posgres,
   database: "pizzadb",
   username: "jamesgood",

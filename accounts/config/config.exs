@@ -2,16 +2,6 @@
 # and its dependencies with the aid of the Mix.Config module.
 use Mix.Config
 
-config :accounts, ecto_repos: [Accounts.Repo]
-
-config :accounts, Accounts.Repo,
-  adapter: Ecto.Adapters.Posgres,
-  database: "pizzadb",
-  username: "jamesgood",
-  password: "postgres",
-  hostname: "localhost",
-  pool_size: 10
-
 # This configuration is loaded before any dependency and is restricted
 # to this project. If another project depends on this project, this
 # file won't be loaded nor affect the parent project. For this reason,

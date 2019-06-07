@@ -1,4 +1,4 @@
-defmodule Accounts.Repo.Migrations.AddPermissionsTable do
+defmodule Dbstore.Repo.Migrations.AddPermissionsTable do
   use Ecto.Migration
 
   def change do

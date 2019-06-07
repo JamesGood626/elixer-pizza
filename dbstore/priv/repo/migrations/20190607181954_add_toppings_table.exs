@@ -1,4 +1,4 @@
-defmodule Pizzas.Repo.Migrations.AddToppingsTable do
+defmodule Dbstore.Repo.Migrations.AddToppingsTable do
   use Ecto.Migration
 
   def change do
