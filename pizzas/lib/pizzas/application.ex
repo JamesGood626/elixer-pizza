@@ -11,7 +11,6 @@ defmodule Pizzas.Application do
     children = [
       # Starts a worker by calling: Pizzas.Worker.start_link(arg)
       # {Pizzas.Worker, arg}
-      Pizzas.Repo
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

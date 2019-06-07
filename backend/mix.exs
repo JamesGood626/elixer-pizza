@@ -19,7 +19,7 @@ defmodule Backend.MixProject do
   def application do
     [
       mod: {Backend.Application, []},
-      extra_applications: [:logger, :runtime_tools, :accounts]
+      extra_applications: [:logger, :runtime_tools, :accounts, :pizzas]
     ]
   end
 
@@ -40,8 +40,8 @@ defmodule Backend.MixProject do
       {:jason, "~> 1.0"},
       {:plug_cowboy, "~> 2.0"},
       {:poison, "~> 3.1"},
-      {:accounts, path: "../accounts"}
-      # {:pizzas, path: "../pizzas", compile: false}
+      {:accounts, path: "../accounts", compile: false},
+      {:pizzas, path: "../pizzas", compile: false}
     ]
   end
 end

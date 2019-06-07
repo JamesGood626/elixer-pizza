@@ -5,7 +5,7 @@ defmodule BackendWeb.Router do
     plug(:accepts, ["html"])
     plug(:fetch_session)
     plug(:fetch_flash)
-    plug(:protect_from_forgery)
+    # plug(:protect_from_forgery)
     plug(:put_secure_browser_headers)
   end
 
@@ -16,8 +16,11 @@ defmodule BackendWeb.Router do
   scope "/", BackendWeb do
     pipe_through(:browser)
 
-    get("/", PageController, :index)
-    get("/test", PageController, :test)
+    # UserControllers
+    post("/signup", UserController, :signup)
+
+    # PizzaControllers
+    post("/pizza", PizzaController, :create_pizza)
   end
 
   # Other scopes may use custom stacks.
