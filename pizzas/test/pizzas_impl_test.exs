@@ -1,4 +1,4 @@
-defmodule PizzasTest do
+defmodule PizzasImplTest do
   use ExUnit.Case, async: true
   alias Pizzas
 

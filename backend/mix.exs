@@ -40,8 +40,8 @@ defmodule Backend.MixProject do
       {:jason, "~> 1.0"},
       {:plug_cowboy, "~> 2.0"},
       {:poison, "~> 3.1"},
-      {:accounts, path: "../accounts", compile: false},
-      {:pizzas, path: "../pizzas", compile: false}
+      {:accounts, path: "../accounts"},
+      {:pizzas, path: "../pizzas"}
     ]
   end
 end

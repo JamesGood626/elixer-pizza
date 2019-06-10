@@ -12,7 +12,6 @@ defmodule Accounts.Application do
     children = [
       # Starts a worker by calling: Accounts.Worker.start_link(arg)
       # {Accounts.Worker, arg}
-      # Accounts.Repo
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

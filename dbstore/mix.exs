@@ -22,7 +22,8 @@ defmodule Dbstore.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:distillery, "~> 2.0"},
+      # {:distillery, "~> 2.0"},
+      {:argon2_elixir, "~> 2.0"},
       {:ecto_sql, "~> 3.0"},
       {:postgrex, ">= 0.0.0"}
     ]
