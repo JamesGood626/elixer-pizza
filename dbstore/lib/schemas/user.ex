@@ -23,9 +23,16 @@ defmodule Dbstore.User do
   # usage of the argon2 lib hash password func:
   # Argon2.Base.hash_password("password", "somesaltSOMESALT", [t_cost: 4, m_cost: 18])
   defp put_pass_hash(changeset) do
+    IO.puts("the changeset")
+    IO.inspect(changeset)
+
     case changeset do
-      %{Ecto.Changeset{valid?: true}, changes: %{password: password}} ->
-        put_change(changeset, :password_hash, )
+      _ ->
+        put_change(
+          changeset,
+          :password_hash,
+          Argon2.Base.hash_password("password", "somesaltSOMESALT", t_cost: 4, m_cost: 18)
+        )
     end
   end
 
