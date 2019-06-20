@@ -39,18 +39,6 @@ defmodule ImplTest do
     status: 202
   }
 
-  # @duplicate_user_errors [
-  #   username:
-  #     {"That username is already taken",
-  #      [constraint: :unique, constraint_name: "users_username_index"]}
-  # ]
-
-  # @invalid_username_errors [
-  #   username:
-  #     {"should be at least %{count} character(s)",
-  #      [count: 3, validation: :length, kind: :min, type: :string]}
-  # ]
-
   setup do
     # This is the key to ensuring that data inserted into the DB
     # will be cleared after each test run.
@@ -61,6 +49,7 @@ defmodule ImplTest do
     test "inserts a user if provided with valid data" do
       assert @valid_creation_response = Accounts.signup_user(@valid_input)
 
+      # TODO: Once I assing UUIDs or something I'll add this back into the test case.
       # assert %User{id: id} = Accounts.retrieve_user_by_id(id)
     end
 
@@ -71,10 +60,7 @@ defmodule ImplTest do
     end
 
     test "fails to insert user with an invalid username" do
-      assert invalid_username_response = Accounts.signup_user(@invalid_input)
+      assert @invalid_username_response = Accounts.signup_user(@invalid_input)
     end
   end
 end
-
-# %{status: 200, payload: %{message: "You've successfully signed up!", username: username}}
-# %{status: 202, payload: %{errors: errors}}

@@ -63,7 +63,9 @@ defmodule Accounts.Impl do
     errors =
       changeset
       |> Changeset.traverse_errors(fn {msg, opts} ->
-        Keyword.has_key?(opts, :validation)
+        # TODO: Check if :fields stays consistent as a way to check
+        # that this opts data structure is representative of a unique_constraint.
+        Keyword.has_key?(opts, :fields)
         |> format_error(msg, opts)
       end)
 
