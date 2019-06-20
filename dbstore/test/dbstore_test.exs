@@ -1,4 +1,4 @@
-defmodule DbstoreTest do
+defmodule DbStoreTest do
   use ExUnit.Case
   doctest Dbstore
 

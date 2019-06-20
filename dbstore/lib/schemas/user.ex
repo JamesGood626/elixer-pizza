@@ -2,6 +2,8 @@ defmodule Dbstore.User do
   use Ecto.Schema
   import Ecto.Changeset
 
+  @salty "somesaltSOMESALT"
+
   schema "users" do
     field(:username, :string)
     field(:password, :string, virtual: true)
@@ -17,24 +19,20 @@ defmodule Dbstore.User do
     |> validate_required([:username, :password])
     |> validate_length(:username, min: 3, max: 20)
     |> validate_length(:password, min: 8, max: 50)
+    |> unsafe_validate_unique([:username], Dbstore.Repo, message: "That username is already taken")
+    |> unique_constraint(:username)
     |> put_pass_hash
   end
 
-  # usage of the argon2 lib hash password func:
-  # Argon2.Base.hash_password("password", "somesaltSOMESALT", [t_cost: 4, m_cost: 18])
-  defp put_pass_hash(changeset) do
-    IO.puts("the changeset")
-    IO.inspect(changeset)
-
-    case changeset do
-      _ ->
-        put_change(
-          changeset,
-          :password_hash,
-          Argon2.Base.hash_password("password", "somesaltSOMESALT", t_cost: 4, m_cost: 18)
-        )
-    end
+  defp put_pass_hash(changeset = %Ecto.Changeset{valid?: true, changes: %{password: password}}) do
+    put_change(
+      changeset,
+      :password_hash,
+      Argon2.Base.hash_password(password, @salty, t_cost: 4, m_cost: 18)
+    )
   end
+
+  defp put_pass_hash(changeset), do: changeset
 
   # This is from the documentation to turn changeset errors into an easier to use map shape:
   # traverse_errors(changeset, fn {msg, opts} ->

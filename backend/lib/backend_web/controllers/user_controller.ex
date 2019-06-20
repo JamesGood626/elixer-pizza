@@ -14,6 +14,8 @@ defmodule BackendWeb.UserController do
       |> Map.from_struct()
       |> IO.inspect()
 
-    json(conn, %{message: "success", data: %{username: username}})
+    conn
+    |> put_status(200)
+    |> json(%{message: "success", data: %{username: username}})
   end
 end
