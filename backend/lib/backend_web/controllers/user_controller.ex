@@ -3,19 +3,14 @@ defmodule BackendWeb.UserController do
   alias Accounts
 
   def signup(conn, %{"username" => username, "password" => password}) do
-    # Will use service function to delegate this logic to.
-    # service function will use function clauses to catch {:ok, user}/{:err, changeset}
-    {:ok, user} = Accounts.create_user(%{username: username, password: password})
-    IO.puts("user returned from create_user")
-    IO.inspect(user)
+    %{status: status, payload: payload} =
+      Accounts.signup_user(%{username: username, password: password})
 
-    %{username: username} =
-      Accounts.retrieve_user_by_id(user.id)
-      |> Map.from_struct()
-      |> IO.inspect()
+    IO.puts("payload returned from signup_user")
+    IO.inspect(payload)
 
     conn
-    |> put_status(200)
-    |> json(%{message: "success", data: %{username: username}})
+    |> put_status(status)
+    |> json(%{data: payload})
   end
 end
