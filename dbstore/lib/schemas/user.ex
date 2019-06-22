@@ -2,6 +2,7 @@ defmodule Dbstore.User do
   use Ecto.Schema
   import Ecto.Changeset
 
+  # TODO: Best way to generate/set these salts securely?
   @salty "somesaltSOMESALT"
 
   schema "users" do

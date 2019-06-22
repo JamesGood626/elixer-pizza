@@ -6,5 +6,7 @@ defmodule Dbstore.Repo.Migrations.AddPermissionsTable do
       add(:name, :string, null: false)
       timestamps()
     end
+
+    create(unique_index("permissions", :name))
   end
 end

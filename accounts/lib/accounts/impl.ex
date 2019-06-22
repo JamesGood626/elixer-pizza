@@ -3,45 +3,119 @@ defmodule Accounts.Impl do
   Documentation for Accounts.Impl
   """
   alias Ecto.Changeset
-  alias Dbstore.Repo
-  alias Dbstore.User
+  alias Dbstore.{Repo, User, Permissions}
+  # alias Dbstore.User
 
-  @username_length_error %{
-    field: "username",
-    message: "Username must be between 3 and 20 characters in length"
-  }
-  @password_length_error %{
-    field: "password",
-    message: "Password must be between 8 and 50 characters in length"
-  }
-  @oops_error %{
-    field: "_",
-    message: "Oops.. Something went wrong"
-  }
+  # User Permissions
+  @pizza_operations_manager "PIZZA_OPERATION_MANAGER"
+  @pizza_chef "PIZZA_CHEF"
 
-  def signup_user(params) do
-    create_user(params)
-    |> handle_create_user_result
+  # Status Codes
+  @created_code 201
+  @bad_request_code 400
+  @forbidden_code 403
+
+  def signup_pizza_ops_manager(params) do
+    Repo.transaction(fn ->
+      create_user(params)
+      |> setup_user_permissions(@pizza_operations_manager)
+    end)
+    |> signup_user_response()
   end
 
-  # TODO: This is really private too... but I need to figure out how to
-  # make it private and still allow it to be tested. (Like the tests for documentation)
-  def create_user(params) do
-    %User{}
-    |> User.changeset(params)
-    |> Repo.insert()
+  def signup_pizza_chef(params) do
+    Repo.transaction(fn ->
+      create_user(params)
+      |> setup_user_permissions(@pizza_chef)
+    end)
+    |> signup_user_response()
   end
 
   def retrieve_user_by_id(id), do: Repo.get!(User, id)
 
-  def retrieve_user_by_username(username), do: Repo.get!(User, username)
+  def retrieve_user_by_username(username), do: Repo.get_by(User, username: username)
+
+  def retrieve_permission_by_name(name), do: Repo.get_by(Permissions, name: name)
+
+  # TODO:
+  # 1. Create seeding data, in order to establish a base set of test data (necessary
+  #    for permissions, as these will be created manually if this app were to be deployed
+  #    i.e. no endpoints will be made available for creating permissions.)
+  # 2. Create two separate signup endpoints for signing up as the two consumer type roles:
+  #    - PIZZA_OPERATION_MANAGER
+  #    - PIZZA_CHEF
+  # 3. In the separate endpoints, you'll retrieve the necessary permission through a query to the DB
+  #    and call the Repo.insert_all to create the user_permissions record for that user.
+  # 4. Check and make sure that creating & querying for user_permissions without a schema will be acceptable
+  #    (REFER TO ECTO BOOK)
+  # 5. The third permission will be one that is created before the app is deployed, and may
+  #    only be created by someone that has access to the DB:
+  #    - PIZZA_APPLICATION_MAKER
+  defp create_user_permission(user_id, permission_id) do
+    Repo.insert_all("user_permissions", [
+      [
+        user_id: user_id,
+        permission_id: permission_id,
+        inserted_at: DateTime.utc_now(),
+        updated_at: DateTime.utc_now()
+      ]
+    ])
+  end
 
   ##################
   #### PRIVATES ####
   ##################
-  defp handle_create_user_result({:ok, user = %User{username: username}}) do
+
+  @doc """
+    Creates a user when provided with valid input:
+
+    create_user(%{username: "user_one", password: "password"})
+    {:ok, %{id: 1, username: "user_one"}}
+
+    Returns an error tuple when provided with invalid input:
+
+    create_user(%{username: "da", password: "password"})
+    {:error, errors: %{username: ["should be at least 3 character(s)"]}}
+  """
+  defp create_user(params) do
+    %User{}
+    |> User.changeset(params)
+    |> Repo.insert()
+    |> handle_create_user_result
+  end
+
+  defp setup_user_permissions({:ok, %{id: user_id, username: username}}, permission) do
+    case retrieve_permission_by_name(permission) do
+      %Permissions{id: permission_id} ->
+        # TODO: Need to handle possible user_permission resource insertion failure
+        create_user_permission(user_id, permission_id)
+        %{username: username}
+
+      nil ->
+        # This will be the message that ends up in the error payload w/ the 403 reponse
+        Repo.rollback("Permission not found")
+    end
+  end
+
+  defp setup_user_permissions({:error, errors}, _permission) do
+    Repo.rollback(%{status: @bad_request_code, errors: errors})
+  end
+
+  defp signup_user_response({:ok, %{username: username}}) do
+    %{
+      status: @created_code,
+      payload: %{message: "You've successfully signed up!", username: username}
+    }
+  end
+
+  defp signup_user_response({:error, %{status: status, errors: errors}}) do
+    %{status: status, payload: %{errors: errors}}
+  end
+
+  defp handle_create_user_result({:ok, user = %User{id: id, username: username}}) do
     # TODO: authenticate user and set session.
-    %{status: 200, payload: %{message: "You've successfully signed up!", username: username}}
+    # was returning the HTTP reponse from here before
+    {:ok, %{id: id, username: username}}
   end
 
   @doc """
@@ -69,7 +143,7 @@ defmodule Accounts.Impl do
         |> format_error(msg, opts)
       end)
 
-    %{status: 202, payload: %{errors: errors}}
+    {:error, errors}
   end
 
   # This case handles unique_constraints
