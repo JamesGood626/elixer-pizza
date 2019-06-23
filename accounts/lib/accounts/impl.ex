@@ -15,6 +15,11 @@ defmodule Accounts.Impl do
   @bad_request_code 400
   @forbidden_code 403
 
+  # Response Messages
+  @signup_success_message "You've successfully signed up!"
+  @something_went_wrong_message "Oops... Something went wrong. Please try again."
+  @permission_not_found_message "Permission not found"
+
   def signup_pizza_ops_manager(params) do
     Repo.transaction(fn ->
       create_user(params)
@@ -101,12 +106,18 @@ defmodule Accounts.Impl do
     case retrieve_permission_by_name(permission) do
       %Permissions{id: permission_id} ->
         # TODO: Need to handle possible user_permission resource insertion failure
-        create_user_permission(user_id, permission_id)
-        %{username: username}
+        case create_user_permission(user_id, permission_id) do
+          {1, nil} ->
+            # This is the success case
+            %{username: username}
+
+          _ ->
+            Repo.rollback(@something_went_wrong_message)
+        end
 
       nil ->
         # This will be the message that ends up in the error payload w/ the 403 reponse
-        Repo.rollback("Permission not found")
+        Repo.rollback(@permission_not_found_message)
     end
   end
 
@@ -124,7 +135,7 @@ defmodule Accounts.Impl do
   defp signup_user_response({:ok, %{username: username}}) do
     %{
       status: @created_code,
-      payload: %{message: "You've successfully signed up!", username: username}
+      payload: %{message: @signup_success_message, username: username}
     }
   end
 
