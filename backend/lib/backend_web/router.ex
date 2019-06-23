@@ -15,16 +15,17 @@ defmodule BackendWeb.Router do
 
   scope "/", BackendWeb do
     pipe_through(:browser)
+  end
+
+  # Other scopes may use custom stacks.
+  scope "/api", BackendWeb do
+    pipe_through(:api)
 
     # UserControllers
-    post("/signup", UserController, :signup)
+    post("/signup_pizza_ops_manager", UserController, :signup_pizza_ops_manager)
+    post("/signup_pizza_chef", UserController, :signup_pizza_chef)
 
     # PizzaControllers
     post("/pizza", PizzaController, :create_pizza)
   end
-
-  # Other scopes may use custom stacks.
-  # scope "/api", BackendWeb do
-  #   pipe_through :api
-  # end
 end

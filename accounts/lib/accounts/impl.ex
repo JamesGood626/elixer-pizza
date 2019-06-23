@@ -2,9 +2,9 @@ defmodule Accounts.Impl do
   @moduledoc """
   Documentation for Accounts.Impl
   """
+  import Ecto.Query
   alias Ecto.Changeset
   alias Dbstore.{Repo, User, Permissions}
-  # alias Dbstore.User
 
   # User Permissions
   @pizza_operations_manager "PIZZA_OPERATION_MANAGER"
@@ -36,6 +36,19 @@ defmodule Accounts.Impl do
   def retrieve_user_by_username(username), do: Repo.get_by(User, username: username)
 
   def retrieve_permission_by_name(name), do: Repo.get_by(Permissions, name: name)
+
+  def retrieve_user_permissions_by_userid(user_id) do
+    [permission | _] =
+      from(up in "user_permissions",
+        join: p in "permissions",
+        on: up.permission_id == p.id,
+        where: up.user_id == ^user_id,
+        select: p.name
+      )
+      |> Repo.all()
+
+    permission
+  end
 
   # TODO:
   # 1. Create seeding data, in order to establish a base set of test data (necessary
@@ -97,6 +110,13 @@ defmodule Accounts.Impl do
     end
   end
 
+  @doc """
+    setup_user_permissions({:error, errors}, @pizza_chef)
+
+    A status code and errors array will be returned from this function,
+    and be used inside of signup_user_response send back as a response
+    to the client.
+  """
   defp setup_user_permissions({:error, errors}, _permission) do
     Repo.rollback(%{status: @bad_request_code, errors: errors})
   end

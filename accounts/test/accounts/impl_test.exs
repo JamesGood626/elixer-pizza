@@ -2,7 +2,7 @@ defmodule ImplTest do
   use ExUnit.Case
   alias Ecto.Changeset
   alias Accounts.Impl
-  alias Dbstore.{Repo, Permissions}
+  alias Dbstore.{Repo, User, Permissions, UserPermissions}
 
   @valid_input %{
     username: "user_one",
@@ -64,7 +64,9 @@ defmodule ImplTest do
   describe "signup_pizza_ops_manager/1" do
     test "inserts a user with PIZZA_OPERATION_MANAGER permissions if provided with valid data" do
       assert @valid_creation_response = Accounts.signup_pizza_ops_manager(@valid_input)
-
+      user = Impl.retrieve_user_by_username(@valid_input[:username])
+      permission = Impl.retrieve_user_permissions_by_userid(user.id)
+      assert permission === "PIZZA_OPERATION_MANAGER"
       # TODO: Once I assing UUIDs or something I'll add this back into the test case.
       # assert %User{id: id} = Accounts.retrieve_user_by_id(id)
     end
@@ -83,7 +85,9 @@ defmodule ImplTest do
   describe "signup_pizza_chef/1" do
     test "inserts a user if provided with valid data" do
       assert @valid_creation_response = Accounts.signup_pizza_chef(@valid_input)
-
+      user = Impl.retrieve_user_by_username(@valid_input[:username])
+      permission = Impl.retrieve_user_permissions_by_userid(user.id)
+      assert permission === "PIZZA_CHEF"
       # TODO: Once I assing UUIDs or something I'll add this back into the test case.
       # assert %User{id: id} = Accounts.retrieve_user_by_id(id)
     end
