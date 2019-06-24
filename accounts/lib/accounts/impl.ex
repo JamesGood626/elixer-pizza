@@ -6,13 +6,9 @@ defmodule Accounts.Impl do
   alias Ecto.Changeset
   alias Dbstore.{Repo, User, Permissions}
 
-  # TODOS (for creating a session upon signup/login):
-  # 1. Create a generate_remember_token function
-  # 2. Hash that remember token (and save it to the DB under the user)
-  # 3. Create the session_data to be stored on the session (make sure to include
-  #    an expiry time via generate_expiry_time).
-  # 4. conn = put_session(conn, :session_token, session_data)
-  # 5. json(conn, %{message: @signup_success_message})
+  # Key for hashing the user's remember_token
+  @hash_key "Ahsdujadsnkjadnskja"
+  @remember_token_bytes 32
 
   # User Permissions
   @pizza_operations_manager "PIZZA_OPERATION_MANAGER"
@@ -33,6 +29,8 @@ defmodule Accounts.Impl do
       create_user(params)
       |> setup_user_permissions(@pizza_operations_manager)
     end)
+    # Create remember_token and set it on the session_data
+    |> login_user()
     |> signup_user_response()
   end
 
@@ -41,6 +39,8 @@ defmodule Accounts.Impl do
       create_user(params)
       |> setup_user_permissions(@pizza_chef)
     end)
+    # Create remember_token and set it on the session_data
+    |> login_user()
     |> signup_user_response()
   end
 
@@ -91,6 +91,17 @@ defmodule Accounts.Impl do
     |> handle_create_user_permission(user_id, username)
   end
 
+  @doc """
+    setup_user_permissions({:error, errors}, @pizza_chef)
+
+    A status code and errors array will be returned from this function,
+    and be used inside of signup_user_response send back as a response
+    to the client.
+  """
+  defp setup_user_permissions({:error, errors}, _permission) do
+    Repo.rollback(%{status: @bad_request_code, errors: errors})
+  end
+
   defp got_permission?(%Permissions{id: permission_id}), do: permission_id
   defp got_permission?(nil), do: Repo.rollback(@permission_not_found_message)
 
@@ -99,7 +110,7 @@ defmodule Accounts.Impl do
     case create_user_permission(user_id, permission_id) do
       {1, nil} ->
         # Successfully signed up
-        %{username: username}
+        %{user_id: user_id, username: username}
 
       _ ->
         Repo.rollback(@something_went_wrong_message)
@@ -113,17 +124,6 @@ defmodule Accounts.Impl do
   defp handle_create_user_permission(_permission_id, _user_id, _username),
     do: Repo.rollback(@something_went_wrong_message)
 
-  @doc """
-    setup_user_permissions({:error, errors}, @pizza_chef)
-
-    A status code and errors array will be returned from this function,
-    and be used inside of signup_user_response send back as a response
-    to the client.
-  """
-  defp setup_user_permissions({:error, errors}, _permission) do
-    Repo.rollback(%{status: @bad_request_code, errors: errors})
-  end
-
   defp create_user_permission(user_id, permission_id) do
     Repo.insert_all("user_permissions", [
       [
@@ -135,19 +135,37 @@ defmodule Accounts.Impl do
     ])
   end
 
-  defp signup_user_response({:ok, %{username: username}}) do
+  defp login_user({:ok, %{user_id: user_id, username: username}}) do
+    case Auth.create_session_data(username, @hash_key, @remember_token_bytes) do
+      {:ok, {session_data, hashed_remember_token}} ->
+        # TODO (last left off here!):
+        # save hashed_remember_token to DB.
+        update_user_hashed_remember_token(user_id, hashed_remember_token)
+        {:ok, %{username: username}, session_data}
+
+      {:error, _msg} ->
+        # TODO: Need to check the form of the other errors, and ensure that
+        # this arbitrary error message matches the same shape.
+        {:error, %{status: @bad_request_code, errors: @something_went_wrong_message}}
+    end
+  end
+
+  defp login_user({:error, response}), do: {:error, response}
+
+  defp signup_user_response({:ok, %{username: username}, session_data}) do
     %{
       status: @created_code,
-      payload: %{message: @signup_success_message, username: username}
+      payload: %{message: @signup_success_message, username: username},
+      session_data: session_data
     }
   end
 
   defp signup_user_response({:error, %{status: status, errors: errors}}) do
-    %{status: status, payload: %{errors: errors}}
+    %{status: status, payload: %{errors: errors}, session_data: nil}
   end
 
   defp handle_create_user_result({:ok, user = %User{id: id, username: username}}) do
-    # TODO: authenticate user and set session.
+    # TODO: login user and set session.
     # was returning the HTTP reponse from here before
     {:ok, %{id: id, username: username}}
   end
@@ -187,5 +205,14 @@ defmodule Accounts.Impl do
     Enum.reduce(opts, msg, fn {key, value}, acc ->
       String.replace(acc, "%{#{key}}", to_string(value))
     end)
+  end
+
+  defp update_user_hashed_remember_token(user_id, hashed_remember_token) do
+    %User{id: user_id}
+    |> Ecto.Changeset.cast(
+      %{hashed_remember_token: hashed_remember_token},
+      [:hashed_remember_token]
+    )
+    |> Repo.update()
   end
 end

@@ -11,6 +11,7 @@ defmodule BackendWeb.Router do
 
   pipeline :api do
     plug(:accepts, ["json"])
+    plug(:fetch_session)
   end
 
   scope "/", BackendWeb do

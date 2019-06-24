@@ -3,10 +3,10 @@ defmodule BackendWeb.UserController do
   alias Accounts
 
   def signup_pizza_ops_manager(conn, %{"username" => username, "password" => password}) do
-    %{status: status, payload: payload} =
+    %{status: status, payload: payload, session_data: session_data} =
       Accounts.signup_pizza_ops_manager(%{username: username, password: password})
 
-    conn
+    set_session_data(conn, session_data)
     |> put_status(status)
     |> json(%{data: payload})
   end
@@ -19,4 +19,7 @@ defmodule BackendWeb.UserController do
     |> put_status(status)
     |> json(%{data: payload})
   end
+
+  defp set_session_data(conn, session_data), do: put_session(conn, :session_token, session_data)
+  defp set_session_data(conn, nil), do: conn
 end

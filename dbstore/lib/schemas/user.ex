@@ -9,6 +9,7 @@ defmodule Dbstore.User do
     field(:username, :string)
     field(:password, :string, virtual: true)
     field(:password_hash, :string)
+    field(:hashed_remember_token, :string)
     timestamps()
 
     many_to_many(:permissions, Dbstore.Permissions, join_through: "user_permissions")
@@ -29,7 +30,8 @@ defmodule Dbstore.User do
     put_change(
       changeset,
       :password_hash,
-      Argon2.Base.hash_password(password, @salty, t_cost: 4, m_cost: 18)
+      # TODO: Could utilize Mix.ENV to determine whether in dev, test, prod to determine hash rounds
+      Auth.hash_password(password, @salty)
     )
   end
 
