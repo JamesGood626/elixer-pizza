@@ -6,6 +6,14 @@ defmodule Accounts.Impl do
   alias Ecto.Changeset
   alias Dbstore.{Repo, User, Permissions}
 
+  # TODOS (for creating a session upon signup/login):
+  # 1. Create a generate_remember_token function
+  # 2. Hash that remember token (and save it to the DB under the user)
+  # 3. Create the session_data to be stored on the session (make sure to include
+  #    an expiry time via generate_expiry_time).
+  # 4. conn = put_session(conn, :session_token, session_data)
+  # 5. json(conn, %{message: @signup_success_message})
+
   # User Permissions
   @pizza_operations_manager "PIZZA_OPERATION_MANAGER"
   @pizza_chef "PIZZA_CHEF"
@@ -55,31 +63,6 @@ defmodule Accounts.Impl do
     permission
   end
 
-  # TODO:
-  # 1. Create seeding data, in order to establish a base set of test data (necessary
-  #    for permissions, as these will be created manually if this app were to be deployed
-  #    i.e. no endpoints will be made available for creating permissions.)
-  # 2. Create two separate signup endpoints for signing up as the two consumer type roles:
-  #    - PIZZA_OPERATION_MANAGER
-  #    - PIZZA_CHEF
-  # 3. In the separate endpoints, you'll retrieve the necessary permission through a query to the DB
-  #    and call the Repo.insert_all to create the user_permissions record for that user.
-  # 4. Check and make sure that creating & querying for user_permissions without a schema will be acceptable
-  #    (REFER TO ECTO BOOK)
-  # 5. The third permission will be one that is created before the app is deployed, and may
-  #    only be created by someone that has access to the DB:
-  #    - PIZZA_APPLICATION_MAKER
-  defp create_user_permission(user_id, permission_id) do
-    Repo.insert_all("user_permissions", [
-      [
-        user_id: user_id,
-        permission_id: permission_id,
-        inserted_at: DateTime.utc_now(),
-        updated_at: DateTime.utc_now()
-      ]
-    ])
-  end
-
   ##################
   #### PRIVATES ####
   ##################
@@ -103,23 +86,32 @@ defmodule Accounts.Impl do
   end
 
   defp setup_user_permissions({:ok, %{id: user_id, username: username}}, permission) do
-    case retrieve_permission_by_name(permission) do
-      %Permissions{id: permission_id} ->
-        # TODO: Need to handle possible user_permission resource insertion failure
-        case create_user_permission(user_id, permission_id) do
-          {1, nil} ->
-            # This is the success case
-            %{username: username}
+    retrieve_permission_by_name(permission)
+    |> got_permission?()
+    |> handle_create_user_permission(user_id, username)
+  end
 
-          _ ->
-            Repo.rollback(@something_went_wrong_message)
-        end
+  defp got_permission?(%Permissions{id: permission_id}), do: permission_id
+  defp got_permission?(nil), do: Repo.rollback(@permission_not_found_message)
 
-      nil ->
-        # This will be the message that ends up in the error payload w/ the 403 reponse
-        Repo.rollback(@permission_not_found_message)
+  defp handle_create_user_permission(permission_id, user_id, username)
+       when is_integer(permission_id) do
+    case create_user_permission(user_id, permission_id) do
+      {1, nil} ->
+        # Successfully signed up
+        %{username: username}
+
+      _ ->
+        Repo.rollback(@something_went_wrong_message)
     end
   end
+
+  # Have this here just in case Repo.rollback is called in got_permission?/1.
+  # It doesn't return a value, but I'm not sure if it immediately returns from the function.
+  # and will immediately terminate the execution of setup_user_permissions and not call this function.
+  # My assumption is that is what it does... but I'll need to play w/ it.
+  defp handle_create_user_permission(_permission_id, _user_id, _username),
+    do: Repo.rollback(@something_went_wrong_message)
 
   @doc """
     setup_user_permissions({:error, errors}, @pizza_chef)
@@ -130,6 +122,17 @@ defmodule Accounts.Impl do
   """
   defp setup_user_permissions({:error, errors}, _permission) do
     Repo.rollback(%{status: @bad_request_code, errors: errors})
+  end
+
+  defp create_user_permission(user_id, permission_id) do
+    Repo.insert_all("user_permissions", [
+      [
+        user_id: user_id,
+        permission_id: permission_id,
+        inserted_at: DateTime.utc_now(),
+        updated_at: DateTime.utc_now()
+      ]
+    ])
   end
 
   defp signup_user_response({:ok, %{username: username}}) do
