@@ -25,6 +25,7 @@ defmodule BackendWeb.Router do
     # UserControllers
     post("/signup_pizza_ops_manager", UserController, :signup_pizza_ops_manager)
     post("/signup_pizza_chef", UserController, :signup_pizza_chef)
+    post("/login", UserController, :login)
 
     # PizzaControllers
     post("/pizza", PizzaController, :create_pizza)

@@ -16,7 +16,6 @@ defmodule ImplTest do
     username: "user_two",
     password: "user_two_password"
   }
-
   @valid_creation_response %{
     payload: %{
       message: "You've successfully signed up!",
@@ -37,6 +36,14 @@ defmodule ImplTest do
       errors: %{username: ["That username is already taken"]}
     },
     status: 400
+  }
+
+  @valid_login_response %{
+    payload: %{
+      message: "You've successfully logged in!",
+      username: "user_one"
+    },
+    status: 201
   }
 
   # "setup_all" is called once per module before any test runs
@@ -103,29 +110,11 @@ defmodule ImplTest do
     end
   end
 
-  # Original IMPL
-  # describe "signup_user/1" do
-  #   test "inserts a user if provided with valid data", %{
-  #     pizza_ops_manager_id: pizza_ops_manager_id,
-  #     pizza_chef_id: pizza_chef_id
-  #   } do
-  #     IO.puts("GOT PERMISSIONS IDS IN signup_user/1")
-  #     IO.inspect(pizza_ops_manager_id)
-  #     IO.inspect(pizza_chef_id)
-  #     assert @valid_creation_response = Accounts.signup_user(@valid_input)
-
-  #     # TODO: Once I assing UUIDs or something I'll add this back into the test case.
-  #     # assert %User{id: id} = Accounts.retrieve_user_by_id(id)
-  #   end
-
-  #   test "fails to insert a user with a duplicate username" do
-  #     Accounts.signup_user(@user_two)
-
-  #     assert @duplicate_user_response = Accounts.signup_user(@user_two)
-  #   end
-
-  #   test "fails to insert user with an invalid username" do
-  #     assert @invalid_username_response = Accounts.signup_user(@invalid_input)
-  #   end
-  # end
+  describe "login/1" do
+    test "will return successful login response when provided a valid username & password" do
+      Accounts.signup_pizza_chef(@valid_input)
+      response = Impl.login(@valid_input)
+      assert @valid_login_response = response
+    end
+  end
 end

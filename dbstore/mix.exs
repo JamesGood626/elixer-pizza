@@ -23,7 +23,6 @@ defmodule Dbstore.MixProject do
   defp deps do
     [
       # {:distillery, "~> 2.0"},
-      # {:argon2_elixir, "~> 2.0"},
       {:ecto_sql, "~> 3.0"},
       {:postgrex, ">= 0.0.0"},
       {:auth, path: "../auth"}

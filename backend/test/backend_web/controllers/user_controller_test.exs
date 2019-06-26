@@ -13,6 +13,12 @@ defmodule BackendWeb.UserControllerTest do
       "username" => "user_one"
     }
   }
+  @login_success_response %{
+    "data" => %{
+      "message" => "You've successfully logged in!",
+      "username" => "user_one"
+    }
+  }
 
   # "setup_all" is called once per module before any test runs
   setup_all do
@@ -42,5 +48,11 @@ defmodule BackendWeb.UserControllerTest do
   test "POST /api/signup_pizza_chef", %{conn: conn} do
     conn = post(conn, "/api/signup_pizza_chef", @valid_input)
     assert @signup_success_response = json_response(conn, 201)
+  end
+
+  test "POST /api/login", %{conn: conn} do
+    conn = post(conn, "/api/signup_pizza_chef", @valid_input)
+    conn = post(conn, "/api/login", @valid_input)
+    assert @login_success_response = json_response(conn, 201)
   end
 end

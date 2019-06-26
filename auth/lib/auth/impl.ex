@@ -1,13 +1,27 @@
 defmodule Auth.Impl do
   use Timex
 
+  @failed_password_match_message "Username or password is incorrect."
+
   def hash_password(password, salt) do
     Argon2.Base.hash_password(password, salt, t_cost: 4, m_cost: 18)
   end
 
-  def check_user_password(user, password) do
-    # Can only assume this returns -> true or false
-    user |> Argon2.check_pass(password)
+  def check_password(nil, _password), do: {:error, @failed_password_match_message}
+
+  @doc """
+    Returns {:ok, %{user_id: user_id, username: username}}
+    In the case of a successful password match in order to facilitate piping this functions
+    output into accounts/accounts/impl.ex login function.
+  """
+  def check_password(user, password) do
+    case user |> Argon2.check_pass(password) do
+      {:ok, _} ->
+        {:ok, %{user_id: user.id, username: user.username}}
+
+      {:error, "invalid password"} ->
+        {:error, @failed_password_match_message}
+    end
   end
 
   def create_session_data(username, hash_key, bytes) do

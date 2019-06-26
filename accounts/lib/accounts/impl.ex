@@ -21,31 +21,36 @@ defmodule Accounts.Impl do
 
   # Response Messages
   @signup_success_message "You've successfully signed up!"
+  @login_success_message "You've successfully logged in!"
   @something_went_wrong_message "Oops... Something went wrong. Please try again."
   @permission_not_found_message "Permission not found"
 
   def signup_pizza_ops_manager(params) do
-    Repo.transaction(fn ->
-      create_user(params)
-      |> setup_user_permissions(@pizza_operations_manager)
-    end)
-    # Create remember_token and set it on the session_data
+    params
+    |> create_user_with_permission(@pizza_operations_manager)
+    |> Repo.transaction()
     |> login_user()
-    |> signup_user_response()
+    |> format_response(@signup_success_message)
   end
 
   def signup_pizza_chef(params) do
-    Repo.transaction(fn ->
-      create_user(params)
-      |> setup_user_permissions(@pizza_chef)
-    end)
-    # Create remember_token and set it on the session_data
+    params
+    |> create_user_with_permission(@pizza_chef)
+    |> Repo.transaction()
     |> login_user()
-    |> signup_user_response()
+    |> format_response(@signup_success_message)
+  end
+
+  def login(%{username: username, password: password}) do
+    retrieve_user_by_username(username)
+    |> Auth.check_password(password)
+    |> login_user()
+    |> format_response(@login_success_message)
   end
 
   def retrieve_user_by_id(id), do: Repo.get!(User, id)
 
+  # Repo.get_by either returns the resource Struct or nil
   def retrieve_user_by_username(username), do: Repo.get_by(User, username: username)
 
   def retrieve_permission_by_name(name), do: Repo.get_by(Permissions, name: name)
@@ -66,6 +71,13 @@ defmodule Accounts.Impl do
   ##################
   #### PRIVATES ####
   ##################
+
+  defp create_user_with_permission(params, permission) do
+    fn ->
+      create_user(params)
+      |> setup_user_permissions(permission)
+    end
+  end
 
   @doc """
     Creates a user when provided with valid input:
@@ -152,15 +164,15 @@ defmodule Accounts.Impl do
 
   defp login_user({:error, response}), do: {:error, response}
 
-  defp signup_user_response({:ok, %{username: username}, session_data}) do
+  defp format_response({:ok, %{username: username}, session_data}, message) do
     %{
       status: @created_code,
-      payload: %{message: @signup_success_message, username: username},
+      payload: %{message: message, username: username},
       session_data: session_data
     }
   end
 
-  defp signup_user_response({:error, %{status: status, errors: errors}}) do
+  defp format_response({:error, %{status: status, errors: errors}}, _message) do
     %{status: status, payload: %{errors: errors}, session_data: nil}
   end
 
