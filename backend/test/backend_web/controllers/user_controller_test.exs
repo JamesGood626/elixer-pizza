@@ -2,6 +2,9 @@ defmodule BackendWeb.UserControllerTest do
   use BackendWeb.ConnCase
   alias Dbstore.{Repo, Permissions}
 
+  # TODO:
+  # Create a setup function that creates a second user
+  # to reduce amount of requests for user setup.
   @valid_input %{
     username: "user_one",
     password: "user_one_password"
@@ -43,16 +46,54 @@ defmodule BackendWeb.UserControllerTest do
   test "POST /api/signup_pizza_ops_manager", %{conn: conn} do
     conn = post(conn, "/api/signup_pizza_ops_manager", @valid_input)
     assert @signup_success_response = json_response(conn, 201)
+
+    assert %{
+             "session_token" => %{
+               expiry: expiry,
+               remember_token: remember_token,
+               username: "user_one"
+             }
+           } = conn.private.plug_session
+
+    assert 44 === String.graphemes(remember_token) |> length()
+    # Make assertions that expiry greater than whatever desired session length
   end
 
   test "POST /api/signup_pizza_chef", %{conn: conn} do
     conn = post(conn, "/api/signup_pizza_chef", @valid_input)
     assert @signup_success_response = json_response(conn, 201)
+
+    assert %{
+             "session_token" => %{
+               expiry: expiry,
+               remember_token: remember_token,
+               username: "user_one"
+             }
+           } = conn.private.plug_session
+
+    assert 44 === String.graphemes(remember_token) |> length()
   end
 
   test "POST /api/login", %{conn: conn} do
     conn = post(conn, "/api/signup_pizza_chef", @valid_input)
     conn = post(conn, "/api/login", @valid_input)
     assert @login_success_response = json_response(conn, 201)
+
+    assert %{
+             "session_token" => %{
+               expiry: expiry,
+               remember_token: remember_token,
+               username: "user_one"
+             }
+           } = conn.private.plug_session
+
+    assert 44 === String.graphemes(remember_token) |> length()
+  end
+
+  test "POST /api/logout", %{conn: conn} do
+    conn = post(conn, "/api/signup_pizza_chef", @valid_input)
+    conn = post(conn, "/api/login", @valid_input)
+    conn = post(conn, "/api/logout")
+    assert %{} === conn.private.plug_session
   end
 end
