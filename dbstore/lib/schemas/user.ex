@@ -12,6 +12,7 @@ defmodule Dbstore.User do
     field(:hashed_remember_token, :string)
     timestamps()
 
+    has_many(:pizzas, Dbstore.Pizza)
     many_to_many(:permissions, Dbstore.Permissions, join_through: "user_permissions")
   end
 

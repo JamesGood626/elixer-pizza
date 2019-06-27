@@ -55,6 +55,9 @@ defmodule Accounts.Impl do
 
   def retrieve_permission_by_name(name), do: Repo.get_by(Permissions, name: name)
 
+  @doc """
+    Users are anticipated to only have one permission for the lifetime of their account.
+  """
   def retrieve_user_permissions_by_userid(user_id) do
     [permission | _] =
       from(up in "user_permissions",
