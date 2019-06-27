@@ -21,13 +21,13 @@ Repo.insert_all("pizza_toppings", [
     topping_id: pineapple.id,
     inserted_at: ~N[2019-06-27 16:54:00],
     updated_at: ~N[2019-06-27 16:54:00]
-  ]
+  ],
   [
     pizza_id: pizza.id,
     topping_id: olives.id,
     inserted_at: ~N[2019-06-27 16:54:00],
     updated_at: ~N[2019-06-27 16:54:00]
-  ],
+  ]
 ])
 
 IO.puts("Success! Sample data has been added.")
