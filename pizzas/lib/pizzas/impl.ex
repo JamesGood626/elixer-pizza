@@ -2,24 +2,17 @@ defmodule Pizzas.Impl do
   @moduledoc """
   Documentation for Pizzas.Impl.
   """
-
-  @doc """
-  Hello world.
-
-  ## Examples
-
-      iex> Pizzas.hello()
-      :world
-
-  """
-  def hello do
-    :world
-  end
-
+  import Ecto.Query
+  alias Ecto.Changeset
   alias Dbstore.Repo
   alias Dbstore.Pizza
 
-  def create_pizza(name), do: Repo.insert!(%Pizza{name: name})
+  def create_pizza(name, user_id) do
+    %Pizza{}
+    |> Pizza.changeset(%{name: name, user_id: user_id})
+    |> Repo.insert()
+    |> handle_create_pizza_result()
+  end
 
   def retrieve_pizza_by_id(id), do: Repo.get!(Pizza, id)
 
@@ -60,5 +53,35 @@ defmodule Pizzas.Impl do
       "pizza_toppings",
       toppings
     )
+  end
+
+  defp handle_create_pizza_result({:ok, pizza = %Pizza{id: id, name: name}}) do
+    {:ok, %{id: id, name: name}}
+  end
+
+  defp handle_create_pizza_result({:error, changeset = %Changeset{valid?: false, errors: errors}}) do
+    errors =
+      changeset
+      |> Changeset.traverse_errors(fn {msg, opts} ->
+        # TODO: Check if :fields stays consistent as a way to check
+        # that this opts data structure is representative of a unique_constraint.
+        Keyword.has_key?(opts, :fields)
+        |> format_error(msg, opts)
+      end)
+
+    {:error, errors}
+  end
+
+  # TODO: this logic (format_error) is duplicated in /accounts/lib/accounts/impl.ex
+  # Perhaps move this helper error handling logic into dbstore so that
+  # it may be imported here.
+
+  # This case handles unique_constraints
+  defp format_error(true, msg, opts), do: msg
+
+  defp format_error(false, msg, opts) do
+    Enum.reduce(opts, msg, fn {key, value}, acc ->
+      String.replace(acc, "%{#{key}}", to_string(value))
+    end)
   end
 end

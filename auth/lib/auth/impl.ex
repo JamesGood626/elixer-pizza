@@ -34,7 +34,7 @@ defmodule Auth.Impl do
     :crypto.strong_rand_bytes(remember_token_bytes) |> Base.encode64()
   end
 
-  defp hash_remember_token(remember_token, hash_key) do
+  def hash_remember_token(remember_token, hash_key) do
     case :crypto.hmac(:sha256, hash_key, remember_token) |> Base.encode64() do
       hashed_remember_token ->
         {:ok, {remember_token, hashed_remember_token}}

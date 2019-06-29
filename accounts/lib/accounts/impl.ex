@@ -6,7 +6,7 @@ defmodule Accounts.Impl do
   alias Ecto.Changeset
   alias Dbstore.{Repo, User, Permissions}
 
-  # Key for hashing the user's remember_token
+  # Key for hashing the user's remember_token TODO: (This is duplicated in backend/temp/auth_plug.ex)
   @hash_key "Ahsdujadsnkjadnskja"
   @remember_token_bytes 32
 
@@ -132,10 +132,12 @@ defmodule Accounts.Impl do
     end
   end
 
-  # Have this here just in case Repo.rollback is called in got_permission?/1.
-  # It doesn't return a value, but I'm not sure if it immediately returns from the function.
-  # and will immediately terminate the execution of setup_user_permissions and not call this function.
-  # My assumption is that is what it does... but I'll need to play w/ it.
+  @doc """
+    Have this here just in case Repo.rollback is called in got_permission?/1.
+    It doesn't return a value, but I'm not sure if it immediately returns from the function.
+    and will immediately terminate the execution of setup_user_permissions and not call this function.
+    My assumption is that is what it does... but I'll need to play w/ it.
+  """
   defp handle_create_user_permission(_permission_id, _user_id, _username),
     do: Repo.rollback(@something_went_wrong_message)
 
@@ -153,8 +155,6 @@ defmodule Accounts.Impl do
   defp login_user({:ok, %{user_id: user_id, username: username}}) do
     case Auth.create_session_data(username, @hash_key, @remember_token_bytes) do
       {:ok, {session_data, hashed_remember_token}} ->
-        # TODO (last left off here!):
-        # save hashed_remember_token to DB.
         update_user_hashed_remember_token(user_id, hashed_remember_token)
         {:ok, %{username: username}, session_data}
 
@@ -175,13 +175,20 @@ defmodule Accounts.Impl do
     }
   end
 
+  # TODO: Revisit this after putting more consideration into how I'll make my Auth module
+  # more flexible for future reuse.
+  # NOTE: This is necessary because when the Auth.check_user_password case fails ->
+  # It returns {:error, "Username or password is incorrect"} And that caused a runtime
+  # exception when I was running tests. So I've added this function clause temporarily.
+  defp format_response({:error, msg}, _message) do
+    %{status: 400, payload: %{errors: msg}, session_data: nil}
+  end
+
   defp format_response({:error, %{status: status, errors: errors}}, _message) do
     %{status: status, payload: %{errors: errors}, session_data: nil}
   end
 
   defp handle_create_user_result({:ok, user = %User{id: id, username: username}}) do
-    # TODO: login user and set session.
-    # was returning the HTTP reponse from here before
     {:ok, %{id: id, username: username}}
   end
 
