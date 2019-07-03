@@ -9,19 +9,20 @@ defmodule Backend.MixProject do
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: [:phoenix, :gettext] ++ Mix.compilers(),
       start_permanent: Mix.env() == :prod,
-      deps: deps(),
-      aliases: aliases()
+      deps: deps()
+      # aliases: aliases()
     ]
   end
 
-  def aliases do
-    [
-      test: [
-        "cmd cd ../dbstore && MIX_ENV=test mix ecto.create --quiet && MIX_ENV=test mix ecto.migrate",
-        "test"
-      ]
-    ]
-  end
+  # Makefile should make this unnecessary.
+  # def aliases do
+  #   [
+  #     test: [
+  #       "cmd cd ../dbstore && MIX_ENV=test mix ecto.create --quiet && MIX_ENV=test mix ecto.migrate",
+  #       "test"
+  #     ]
+  #   ]
+  # end
 
   # Configuration for the OTP application.
   #
