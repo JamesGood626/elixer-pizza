@@ -11,6 +11,7 @@ defmodule Accounts.Impl do
   @remember_token_bytes 32
 
   # User Permissions
+  @pizza_application_maker "PIZZA_APPLICATION_MAKER"
   @pizza_operations_manager "PIZZA_OPERATION_MANAGER"
   @pizza_chef "PIZZA_CHEF"
 
@@ -52,6 +53,21 @@ defmodule Accounts.Impl do
 
   # Repo.get_by either returns the resource Struct or nil
   def retrieve_user_by_username(username), do: Repo.get_by(User, username: username)
+
+  def retrieve_user_with_permission(username) do
+    [user_permission_result | []] =
+      from(u in "users",
+        join: up in "user_permissions",
+        on: u.id == up.user_id,
+        join: p in "permissions",
+        on: up.permission_id == p.id,
+        where: u.username == ^username,
+        select: {u.id, p.name}
+      )
+      |> Repo.all()
+
+    user_permission_result
+  end
 
   def retrieve_permission_by_name(name), do: Repo.get_by(Permissions, name: name)
 
