@@ -14,7 +14,9 @@ defmodule Backend.MixProject do
     ]
   end
 
-  # Makefile should make this unnecessary.
+  # TODO: Add abilitiy to specify which project should be recompiled
+  #       in your custom mix tasks
+  # Makefile should make this unnecessary. Temporarily eeping for reference.
   # def aliases do
   #   [
   #     test: [

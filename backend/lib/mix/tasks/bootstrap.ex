@@ -15,27 +15,27 @@ defmodule Mix.Tasks.Bootstrap do
       - mix compile
   """
   def run(_) do
-    setup_dbstore()
-    |> setup_projects
+    bootstrap_dbstore()
+    |> bootstrap_projects
   end
 
-  def setup_dbstore() do
+  def bootstrap_dbstore() do
     IO.puts("Setting up dbstore...")
-    System.cmd("make", ["setup_dbstore"])
-    IO.puts("dbstore setup!")
-    {:ok, ["setup_auth", "setup_accounts", "setup_pizzas"]}
+    System.cmd("make", ["bootstrap_dbstore"])
+    IO.puts("dbstore bootstrapped!")
+    {:ok, ["bootstrap_auth", "bootstrap_accounts", "bootstrap_pizzas"]}
   end
 
-  def setup_projects({:ok, [project | []]}) do
+  def bootstrap_projects({:ok, [project | []]}) do
     IO.puts("Setting up #{project}...")
     System.cmd("make", [project])
-    IO.puts("#{project} setup!")
+    IO.puts("#{project} bootstrapped!")
   end
 
-  def setup_projects({:ok, [project | projects]}) do
-    IO.puts("Setting up #{project}...")
+  def bootstrap_projects({:ok, [project | projects]}) do
+    IO.puts("Bootstrapping #{project}...")
     System.cmd("make", [project])
-    IO.puts("#{project} setup!")
-    setup_projects({:ok, projects})
+    IO.puts("#{project} bootstrapped!")
+    bootstrap_projects({:ok, projects})
   end
 end
