@@ -6,6 +6,7 @@ alias Dbstore.{User, Pizza, Toppings, Permissions}
   |> User.changeset(%{username: "user_one", password: "password"})
   |> Repo.insert()
 
+Repo.insert!(%Permissions{name: "PIZZA_APPLICATION_MAKER"})
 Repo.insert!(%Permissions{name: "PIZZA_OPERATION_MANAGER"})
 Repo.insert!(%Permissions{name: "PIZZA_CHEF"})
 

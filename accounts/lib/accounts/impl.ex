@@ -26,6 +26,18 @@ defmodule Accounts.Impl do
   @something_went_wrong_message "Oops... Something went wrong. Please try again."
   @permission_not_found_message "Permission not found"
 
+  # Introduced this to provide "PIZZA_APPLICATION_MNAKER" to tests
+  # And I suppose this is how any admins introduced into the prod version
+  # will be created... But I still wanted to do more research to determine
+  # if this is really the best way to go about it.
+  def signup_pizza_app_maker(params) do
+    params
+    |> create_user_with_permission(@pizza_application_maker)
+    |> Repo.transaction()
+    |> login_user()
+    |> format_response(@signup_success_message)
+  end
+
   def signup_pizza_ops_manager(params) do
     params
     |> create_user_with_permission(@pizza_operations_manager)

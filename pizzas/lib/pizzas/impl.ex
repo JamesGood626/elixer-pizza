@@ -7,27 +7,42 @@ defmodule Pizzas.Impl do
   alias Dbstore.Repo
   alias Dbstore.{Pizza, Toppings, PizzaTopping}
 
-  def create_pizza_with_toppings({:error, failure_response}, _, _), do: failure_response
+  # Actions
+  @create_pizza "CREATE_PIZZA"
 
-  def create_pizza_with_toppings(user_id, pizza_name, topping_id_list) do
-    IO.puts("result of creating a pizza")
-    Impl.create_pizza(user_id, pizza_name) |> IO.inspect()
+  # TODO: More than likely going to need to revisit this implementation of
+  # checking permissions if more than two permissions may perform the same action.
+  @permissions %{
+    "CREATE_PIZZA" => "PIZZA_APPLICATION_MAKER"
+  }
 
-    %{
-      payload: %{message: "I think the pizza resource was created successfully."},
-      status: 201
-    }
+  defp valid_permission?(action, {user_id, permission}) do
+    case @permissions |> Map.get(action, permission) do
+      action ->
+        user_id
+      nil ->
+        {:error, %{payload: %{message: "You're unable to perform that action."}, status: 400}}
+    end
+  end
+
+  def create_pizza_with_toppings({user_id, permission}, pizza_name, topping_id_list) do
+    case @create_pizza |> valid_permission?({user_id, permission}) do
+      user_id ->
+        Pizzas.Impl.create_pizza(user_id, pizza_name)
+        |> Pizzas.Impl.create_pizza_toppings(topping_id_list)
+      {:error, response} ->
+        {:error, response}
+    end
   end
 
   def create_pizza(user_id, pizza_name) do
     %Pizza{}
     |> Pizza.changeset(%{name: pizza_name, user_id: user_id})
     |> Repo.insert()
-
-    # |> handle_create_pizza_result()
+    |> handle_create_pizza_result()
   end
 
-  def create_pizza_toppings(pizza_id, topping_id_list) do
+  def create_pizza_toppings({:ok, pizza_id}, topping_id_list) do
     toppings =
       topping_id_list
       |> Enum.map(fn topping_id ->
@@ -40,16 +55,23 @@ defmodule Pizzas.Impl do
       end)
 
     # TODO: What are the possible cases for this operation?
+    # May need to response with a message along the lines of
+    # "Pizza was created, unfortunately your toppings fell off the table.
+    #  Please refresh and try again."
     Repo.insert_all(
       "pizza_toppings",
       toppings
     )
 
     %{
-      payload: %{message: "I think the pizza toppings resource was created successfully."},
+      payload: %{
+        message: "Pizza successfully created!"
+      },
       status: 201
     }
   end
+
+  def create_pizza_toppings({:error, message}, _), do: %{payload: %{message: message}, status: 400}
 
   def retrieve_pizza_by_id(id), do: Repo.get!(Pizza, id)
 
@@ -77,7 +99,7 @@ defmodule Pizzas.Impl do
   ##############
 
   defp handle_create_pizza_result({:ok, pizza = %Pizza{id: id, name: name}}) do
-    {:ok, %{id: id, name: name}}
+    {:ok, id}
   end
 
   defp handle_create_pizza_result({:error, changeset = %Changeset{valid?: false, errors: errors}}) do

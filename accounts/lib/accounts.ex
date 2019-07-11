@@ -3,6 +3,7 @@ defmodule Accounts do
   Documentation for Accounts.
   """
 
+  defdelegate signup_pizza_app_maker(params), to: Accounts.Impl
   defdelegate signup_pizza_ops_manager(params), to: Accounts.Impl
   defdelegate signup_pizza_chef(params), to: Accounts.Impl
   defdelegate login(params), to: Accounts.Impl
