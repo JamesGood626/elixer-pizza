@@ -2,8 +2,11 @@ defmodule Backend.AuthPlug do
   import Plug.Conn
   alias Accounts
   alias Auth
+  alias Backend.Helpers
 
   # Key for hashing the user's remember_token TODO: (This is duplicated in lib/accounts/impl.ex)
+  # Take a similar approach to hash keys just as Salts for hashing a user's pw -> store them in db?
+  # TODO: Still needed to look into the reasoning behind doing so.
   @hash_key "Ahsdujadsnkjadnskja"
 
   def authorize_user(conn, _opts) do
@@ -76,6 +79,12 @@ defmodule Backend.AuthPlug do
 
   defp set_session(conn, user), do: conn |> assign(:current_user, user.username)
 
-  defp clean_session(conn),
-    do: conn |> delete_session(:session_token) |> assign(:current_user, nil)
+  # Prefer this... but it seems as though there's a decent amount of coupling
+  # Especially since I wanted to move this plug into a separate app to facilitate reuse...
+  defp clean_session(conn) do
+    conn
+    |> delete_session(:session_token)
+    |> assign(:current_user, nil)
+    |> Helpers.send_client_response(400, %{message: "Invalid session"})
+  end
 end

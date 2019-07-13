@@ -12,9 +12,25 @@ defmodule Pizzas.Impl do
 
   # TODO: More than likely going to need to revisit this implementation of
   # checking permissions if more than two permissions may perform the same action.
+  # UPDATE:
+  # Yes, after re-reading the spec
+  # "PIZZA_OPERATION_MANAGER" should be able to:
+  # - see a list of available toppings
+  # - allowed to add a new topping
+  # - allowed to delete an existing topping
+  # "PIZZA_CHEF"
+  # - allowed to see a list of existing pizzas and their toppings
+  # - allowed to create a new pizza and add toppings to it
+  # - allowed to delete an existing pizza
+  # "PIZZA_APPLICATION_MAKER"
+  # Is only listed for the backend stories, but I assume this requires an admin
+  # interface, so the permissions map will need to look as such:
+  # %{ "LIST_PIZZAS" => ["PIZZA_APPLICATION_MAKER", "PIZZA_CHEF"] }
+  # And that will require iterating over the map inside of valid_permission?
   @permissions %{
     "CREATE_PIZZA" => "PIZZA_APPLICATION_MAKER"
   }
+
 
   defp valid_permission?(action, {user_id, permission}) do
     case @permissions |> Map.get(action, permission) do
@@ -71,7 +87,7 @@ defmodule Pizzas.Impl do
     }
   end
 
-  def create_pizza_toppings({:error, message}, _), do: %{payload: %{message: message}, status: 400}
+  def create_pizza_toppings({:error, message}, _), do: {:error, %{payload: %{message: message}, status: 400}}
 
   def retrieve_pizza_by_id(id), do: Repo.get!(Pizza, id)
 

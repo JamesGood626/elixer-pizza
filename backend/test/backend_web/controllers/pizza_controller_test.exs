@@ -67,7 +67,7 @@ defmodule BackendWeb.PizzaControllerTest do
     } do
       conn = post(conn, "/api/login", @admin_user_input)
       conn = post(conn, "/api/pizza", Map.put(@valid_input, :topping_ids, topping_ids))
-      assert @create_pizza_success_response = json_response(conn, 201)
+      assert @create_pizza_success_response == json_response(conn, 201)
     end
 
     test "pizza creation fails if name is already taken", %{conn: conn, topping_ids: topping_ids} do
@@ -75,7 +75,11 @@ defmodule BackendWeb.PizzaControllerTest do
       valid_input = Map.put(@valid_input, :topping_ids, topping_ids)
       conn = post(conn, "/api/pizza", valid_input)
       conn = post(conn, "/api/pizza", valid_input)
-      assert @create_pizza_duplicate_fail_response = json_response(conn, 400)
+      IO.puts("WHATS THE DAMN DUPE???")
+      result_of_damn_dupe =
+        json_response(conn, 400)
+        |>IO.inspect()
+      assert @create_pizza_duplicate_fail_response == result_of_damn_dupe
     end
   end
 end
