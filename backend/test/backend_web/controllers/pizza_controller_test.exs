@@ -75,11 +75,7 @@ defmodule BackendWeb.PizzaControllerTest do
       valid_input = Map.put(@valid_input, :topping_ids, topping_ids)
       conn = post(conn, "/api/pizza", valid_input)
       conn = post(conn, "/api/pizza", valid_input)
-      IO.puts("WHATS THE DAMN DUPE???")
-      result_of_damn_dupe =
-        json_response(conn, 400)
-        |>IO.inspect()
-      assert @create_pizza_duplicate_fail_response == result_of_damn_dupe
+      assert @create_pizza_duplicate_fail_response == json_response(conn, 400)
     end
   end
 end

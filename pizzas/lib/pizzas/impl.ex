@@ -7,8 +7,16 @@ defmodule Pizzas.Impl do
   alias Dbstore.Repo
   alias Dbstore.{Pizza, Toppings, PizzaTopping}
 
+  # Permissions
+  @pizza_application_maker "PIZZA_APPLICATION_MAKER"
+  @pizza_operation_manager "PIZZA_OPERATION_MANAGER"
+  @pizza_chef "PIZZA_CHEF"
+
   # Actions
   @create_pizza "CREATE_PIZZA"
+  @add_toppings "ADD_TOPPINGS"
+  @list_pizzas "LIST_PIZZAS"
+  @delete_pizza "DELETE_PIZZA"
 
   # TODO: More than likely going to need to revisit this implementation of
   # checking permissions if more than two permissions may perform the same action.
@@ -28,24 +36,48 @@ defmodule Pizzas.Impl do
   # %{ "LIST_PIZZAS" => ["PIZZA_APPLICATION_MAKER", "PIZZA_CHEF"] }
   # And that will require iterating over the map inside of valid_permission?
   @permissions %{
-    "CREATE_PIZZA" => "PIZZA_APPLICATION_MAKER"
+    @create_pizza => [@pizza_application_maker, @pizza_chef],
+    @add_toppings => [@pizza_application_maker, @pizza_chef],
+    @list_pizzas => [@pizza_application_maker, @pizza_chef],
+    @delete_pizza => [@pizza_application_maker, @pizza_chef]
   }
 
-
-  defp valid_permission?(action, {user_id, permission}) do
-    case @permissions |> Map.get(action, permission) do
-      action ->
+  defp valid_permission?(action, permissions, {user_id, permission}) do
+    permissions
+    |> Map.get(action, permission)
+    |> Enum.any?(fn x -> x == permission end)
+    |> case do
+      true ->
         user_id
-      nil ->
+      false ->
+        {:error, %{payload: %{message: "You're unable to perform that action."}, status: 400}}
+    end
+
+    # case @permissions |> Map.get(action, permission) do
+    #   action ->
+    #     user_id
+    #   nil ->
+    #     {:error, %{payload: %{message: "You're unable to perform that action."}, status: 400}}
+    # end
+  end
+
+  defp valid_permission?(action, permissions, permission) do
+    permissions
+    |> Map.get(action, permission)
+    |> Enum.any?(fn x -> x == permission end)
+    |> case do
+      true ->
+        :ok
+      false ->
         {:error, %{payload: %{message: "You're unable to perform that action."}, status: 400}}
     end
   end
 
   def create_pizza_with_toppings({user_id, permission}, pizza_name, topping_id_list) do
-    case @create_pizza |> valid_permission?({user_id, permission}) do
+    case @create_pizza |> valid_permission?(@permissions, {user_id, permission}) do
       user_id ->
-        Pizzas.Impl.create_pizza(user_id, pizza_name)
-        |> Pizzas.Impl.create_pizza_toppings(topping_id_list)
+        create_pizza(user_id, pizza_name)
+        |> create_pizza_toppings(topping_id_list)
       {:error, response} ->
         {:error, response}
     end
@@ -56,6 +88,16 @@ defmodule Pizzas.Impl do
     |> Pizza.changeset(%{name: pizza_name, user_id: user_id})
     |> Repo.insert()
     |> handle_create_pizza_result()
+  end
+
+  def add_toppings_to_pizza(permission, pizza_id, topping_id_list) do
+    case @create_pizza |> valid_permission?(@permissions, permission) do
+      :ok ->
+        create_pizza_toppings({:ok, pizza_id}, topping_id_list)
+        # |> handle_add_toppings_result()
+      {:error, response} ->
+        {:error, response}
+    end
   end
 
   def create_pizza_toppings({:ok, pizza_id}, topping_id_list) do
@@ -71,7 +113,7 @@ defmodule Pizzas.Impl do
       end)
 
     # TODO: What are the possible cases for this operation?
-    # May need to response with a message along the lines of
+    # May need to respond with a message along the lines of
     # "Pizza was created, unfortunately your toppings fell off the table.
     #  Please refresh and try again."
     Repo.insert_all(
@@ -135,6 +177,7 @@ defmodule Pizzas.Impl do
   # Perhaps move this helper error handling logic into dbstore so that
   # it may be imported here.
 
+  # TODO: ah.... should've documented the shape of opts
   # This case handles unique_constraints
   defp format_error(true, msg, opts), do: msg
 

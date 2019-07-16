@@ -48,6 +48,12 @@ defmodule BackendWeb.PizzaController do
     #   |> Accounts.retrieve_user_with_permission()
     #   |> Pizzas.create_pizza_with_toppings(name, topping_ids)
 
+    # TODO:
+    # If I was able to refactor to eliminate the need to call retrieve_user_with_permission
+    # in this controller (by handling that in the authenticate_user plug)... Then I could
+    # Move this with block into the pizzas app instead, and expose one top level create_pizza
+    # function there.
+
     %{current_user: current_user} = conn.assigns
     %{status: status, payload: payload} =
       with {user_id, permission} <- Accounts.retrieve_user_with_permission(current_user),
@@ -72,4 +78,20 @@ defmodule BackendWeb.PizzaController do
   # def valid_permission?(_) do
   #   {:error, %{payload: %{message: "You're unable to perform that action."}, status: 400}}
   # end
+
+  def add_toppings(conn, %{"pizza_id" => pizza_id, "topping_id_list" => topping_id_list}) do
+    %{current_user: current_user} = conn.assigns
+    %{status: status, payload: payload} =
+      with {user_id, permission} <- Accounts.retrieve_user_with_permission(current_user),
+            @add_toppings_success_response <- Pizzas.add_toppings_to_pizza(permission, pizza_id, topping_id_list)
+          do
+            @add_toppings_success_response
+          else
+            {:error, response = @permission_denied_response} -> response
+            # {:error, response = @create_pizza_duplicate_fail_response} -> response
+            _ -> %{status: 400, payload: %{message: "Whoops, something went wrong."}}
+          end
+
+    conn |> Helpers.send_client_response(status, payload)
+  end
 end
