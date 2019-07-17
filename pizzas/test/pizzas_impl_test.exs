@@ -3,6 +3,14 @@ defmodule PizzasImplTest do
   alias Dbstore.{Repo, Pizza, Toppings}
   alias Pizzas
 
+  # Responses
+  @toppings_added_response %{
+    payload: %{
+      message: "Toppings successfully added!"
+    },
+    status: 201
+  }
+
   setup_all do
     Repo.insert(%Toppings{name: "Pineapple"})
     Repo.insert(%Toppings{name: "Sausage"})
@@ -43,7 +51,9 @@ defmodule PizzasImplTest do
 
   test "adds toppings to pizza", %{toppings_id_list: topping_id_list} do
     {:ok, %Pizza{id: pizza_id}} = Repo.insert(%Pizza{name: "Pineapple Surprise"})
-    assert "1" == add_toppings_to_pizza("PIZZA_CHEF", pizza_id, topping_id_list)
+    pizzas = Pizzas.retrieve_pizza_by_id(pizza_id)
+    assert "1" == pizzas
+    assert @toppings_added_response == Pizzas.add_toppings_to_pizza("PIZZA_CHEF", pizza_id, topping_id_list)
   end
 
   # test "update pizza" do

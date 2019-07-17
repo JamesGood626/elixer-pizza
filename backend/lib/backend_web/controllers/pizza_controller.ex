@@ -57,7 +57,7 @@ defmodule BackendWeb.PizzaController do
     %{current_user: current_user} = conn.assigns
     %{status: status, payload: payload} =
       with {user_id, permission} <- Accounts.retrieve_user_with_permission(current_user),
-            @create_pizza_success_response <- Pizzas.create_pizza_with_toppings({user_id, permission}, name, topping_ids)
+            @create_pizza_success_response <- Pizzas.create_pizza_with_toppings(permission, name, topping_ids)
           do
             @create_pizza_success_response
           else

@@ -18,6 +18,20 @@ defmodule Pizzas.Impl do
   @list_pizzas "LIST_PIZZAS"
   @delete_pizza "DELETE_PIZZA"
 
+  # Responses
+  @pizza_created_response %{
+    payload: %{
+      message: "Pizza successfully created!"
+    },
+    status: 201
+  }
+  @toppings_added_response %{
+    payload: %{
+      message: "Toppings successfully added!"
+    },
+    status: 201
+  }
+
   # TODO: More than likely going to need to revisit this implementation of
   # checking permissions if more than two permissions may perform the same action.
   # UPDATE:
@@ -42,13 +56,13 @@ defmodule Pizzas.Impl do
     @delete_pizza => [@pizza_application_maker, @pizza_chef]
   }
 
-  defp valid_permission?(action, permissions, {user_id, permission}) do
+  defp valid_permission?(action, permissions, permission) do
     permissions
     |> Map.get(action, permission)
     |> Enum.any?(fn x -> x == permission end)
     |> case do
       true ->
-        user_id
+        true
       false ->
         {:error, %{payload: %{message: "You're unable to perform that action."}, status: 400}}
     end
@@ -61,46 +75,48 @@ defmodule Pizzas.Impl do
     # end
   end
 
-  defp valid_permission?(action, permissions, permission) do
-    permissions
-    |> Map.get(action, permission)
-    |> Enum.any?(fn x -> x == permission end)
-    |> case do
-      true ->
-        :ok
-      false ->
-        {:error, %{payload: %{message: "You're unable to perform that action."}, status: 400}}
-    end
-  end
+  # defp valid_permission?(action, permissions, permission) do
+  #   permissions
+  #   |> Map.get(action, permission)
+  #   |> Enum.any?(fn x -> x == permission end)
+  #   |> case do
+  #     true ->
+  #       :ok
+  #     false ->
+  #       {:error, %{payload: %{message: "You're unable to perform that action."}, status: 400}}
+  #   end
+  # end
 
-  def create_pizza_with_toppings({user_id, permission}, pizza_name, topping_id_list) do
-    case @create_pizza |> valid_permission?(@permissions, {user_id, permission}) do
-      user_id ->
-        create_pizza(user_id, pizza_name)
+  def create_pizza_with_toppings(permission, pizza_name, topping_id_list) do
+    case @create_pizza |> valid_permission?(@permissions, permission) do
+      :ok ->
+        create_pizza(pizza_name)
         |> create_pizza_toppings(topping_id_list)
       {:error, response} ->
         {:error, response}
     end
   end
 
-  def create_pizza(user_id, pizza_name) do
+  def create_pizza(pizza_name) do
     %Pizza{}
-    |> Pizza.changeset(%{name: pizza_name, user_id: user_id})
+    |> Pizza.changeset(%{name: pizza_name})
     |> Repo.insert()
     |> handle_create_pizza_result()
   end
 
   def add_toppings_to_pizza(permission, pizza_id, topping_id_list) do
     case @create_pizza |> valid_permission?(@permissions, permission) do
-      :ok ->
-        create_pizza_toppings({:ok, pizza_id}, topping_id_list)
+      true ->
+        create_pizza_toppings({:ok, pizza_id}, topping_id_list, true)
         # |> handle_add_toppings_result()
       {:error, response} ->
         {:error, response}
     end
   end
 
-  def create_pizza_toppings({:ok, pizza_id}, topping_id_list) do
+  def create_pizza_toppings({:error, message}, _), do: {:error, %{payload: %{message: message}, status: 400}}
+
+  def create_pizza_toppings({:ok, pizza_id}, topping_id_list, add_toppings_request \\ false) do
     toppings =
       topping_id_list
       |> Enum.map(fn topping_id ->
@@ -121,17 +137,17 @@ defmodule Pizzas.Impl do
       toppings
     )
 
-    %{
-      payload: %{
-        message: "Pizza successfully created!"
-      },
-      status: 201
-    }
+    case add_toppings_request do
+      true ->
+        @toppings_added_response
+      false ->
+        @pizza_created_response
+    end
   end
 
-  def create_pizza_toppings({:error, message}, _), do: {:error, %{payload: %{message: message}, status: 400}}
-
-  def retrieve_pizza_by_id(id), do: Repo.get!(Pizza, id)
+  # TODO: Write a query that will fetch a pizza + the pizza_toppings associated w/
+  #       the pizza's id.
+  def retrieve_pizza_by_id(id), do: Repo.get!(Pizza, id) |> Repo.preload(:toppings)
 
   def retrieve_pizza_by_name(name), do: Repo.get!(Pizza, name)
 
