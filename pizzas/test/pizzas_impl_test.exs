@@ -31,29 +31,38 @@ defmodule PizzasImplTest do
     :ok = Ecto.Adapters.SQL.Sandbox.checkout(Dbstore.Repo)
   end
 
-  # TODO: Didn't rewrite these tests since one of the last
-  # refactors I was doing.
-  # would like to unit test create_pizza, but that function
-  # should really be private. Look into testing private functions.
-  # test "create new pizza" do
-  #   pizza = Pizzas.create_pizza("Cheese")
-  #   new_pizza = Pizzas.retrieve_pizza_by_id(pizza.id)
-  #   assert new_pizza.name === "Cheese"
-  # end
+  test "create new pizza", %{toppings_id_list: topping_id_list} do
+    Pizzas.create_pizza_with_toppings("PIZZA_CHEF", "Supreme", topping_id_list)
+    [pizza] = Pizzas.retrieve_pizzas()
+    assert "Supreme" == pizza.name
+  end
 
-  # test "retrieve all pizzas" do
-  #   Pizzas.create_pizza("Supreme")
-  #   Pizzas.create_pizza("Nacho")
-  #   Pizzas.create_pizza("Veggie")
-  #   pizzas = Pizzas.retrieve_pizzas()
-  #   assert length(pizzas) === 4
-  # end
+  test "retrieve all pizzas", %{toppings_id_list: topping_id_list} do
+    Pizzas.create_pizza_with_toppings("PIZZA_CHEF", "Cheese", topping_id_list)
+    Pizzas.create_pizza_with_toppings("PIZZA_CHEF", "Nacho", topping_id_list)
+    Pizzas.create_pizza_with_toppings("PIZZA_CHEF", "Veggie", topping_id_list)
+    pizzas = Pizzas.retrieve_pizzas()
+    assert length(pizzas) === 3
+  end
+
+  test "creates a pizza" do
+    {:ok, %Pizza{id: pizza_id}} = Repo.insert(%Pizza{name: "Supreme"})
+    pizza = Pizzas.retrieve_pizza_by_id(pizza_id)
+    assert "Supreme" == pizza.name
+  end
+
+  test "retrieves a list of all toppings" do
+    assert [
+      %Dbstore.Toppings{name: "Pineapple"},
+      %Dbstore.Toppings{name: "Sausage"},
+      %Dbstore.Toppings{name: "Jalapenos"}
+    ] = Pizzas.retrieve_toppings()
+  end
 
   test "adds toppings to pizza", %{toppings_id_list: topping_id_list} do
     {:ok, %Pizza{id: pizza_id}} = Repo.insert(%Pizza{name: "Pineapple Surprise"})
-    pizzas = Pizzas.retrieve_pizza_by_id(pizza_id)
-    assert "1" == pizzas
     assert @toppings_added_response == Pizzas.add_toppings_to_pizza("PIZZA_CHEF", pizza_id, topping_id_list)
+    assert ["Pineapple", "Sausage", "Jalapenos"] == Pizzas.retrieve_pizza_toppings_by_pizzaid(pizza_id)
   end
 
   # test "update pizza" do

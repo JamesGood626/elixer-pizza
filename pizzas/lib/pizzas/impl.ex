@@ -56,36 +56,20 @@ defmodule Pizzas.Impl do
     @delete_pizza => [@pizza_application_maker, @pizza_chef]
   }
 
+  # TODO: This needs to be incorporated into the auth lib
+  #       and then passed into whatever functions require
+  #       authorization, along with the roles/permissions.
   defp valid_permission?(action, permissions, permission) do
     permissions
     |> Map.get(action, permission)
     |> Enum.any?(fn x -> x == permission end)
     |> case do
       true ->
-        true
+        :ok
       false ->
         {:error, %{payload: %{message: "You're unable to perform that action."}, status: 400}}
     end
-
-    # case @permissions |> Map.get(action, permission) do
-    #   action ->
-    #     user_id
-    #   nil ->
-    #     {:error, %{payload: %{message: "You're unable to perform that action."}, status: 400}}
-    # end
   end
-
-  # defp valid_permission?(action, permissions, permission) do
-  #   permissions
-  #   |> Map.get(action, permission)
-  #   |> Enum.any?(fn x -> x == permission end)
-  #   |> case do
-  #     true ->
-  #       :ok
-  #     false ->
-  #       {:error, %{payload: %{message: "You're unable to perform that action."}, status: 400}}
-  #   end
-  # end
 
   def create_pizza_with_toppings(permission, pizza_name, topping_id_list) do
     case @create_pizza |> valid_permission?(@permissions, permission) do
@@ -106,8 +90,9 @@ defmodule Pizzas.Impl do
 
   def add_toppings_to_pizza(permission, pizza_id, topping_id_list) do
     case @create_pizza |> valid_permission?(@permissions, permission) do
-      true ->
+      :ok ->
         create_pizza_toppings({:ok, pizza_id}, topping_id_list, true)
+        # TODO: Why did I comment this out?
         # |> handle_add_toppings_result()
       {:error, response} ->
         {:error, response}
@@ -145,9 +130,7 @@ defmodule Pizzas.Impl do
     end
   end
 
-  # TODO: Write a query that will fetch a pizza + the pizza_toppings associated w/
-  #       the pizza's id.
-  def retrieve_pizza_by_id(id), do: Repo.get!(Pizza, id) |> Repo.preload(:toppings)
+  def retrieve_pizza_by_id(id), do: Repo.get!(Pizza, id)
 
   def retrieve_pizza_by_name(name), do: Repo.get!(Pizza, name)
 
@@ -155,6 +138,13 @@ defmodule Pizzas.Impl do
 
   def retrieve_toppings, do: Repo.all(Toppings)
 
+  @doc """
+    The pizza's id and name will already be available on the ui
+    on the pizza_list_view.
+
+    So this function will be
+    called when navigating to the pizza_detail_view.
+  """
   def retrieve_pizza_toppings_by_pizzaid(pizza_id) do
     toppings =
       from(pt in "pizza_toppings",
