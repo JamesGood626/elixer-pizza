@@ -32,14 +32,20 @@ defmodule Pizzas.Impl do
     status: 201
   }
 
-  # TODO: More than likely going to need to revisit this implementation of
-  # checking permissions if more than two permissions may perform the same action.
-  # UPDATE:
-  # Yes, after re-reading the spec
+  # TODO:
+  # Implement in toppings_controller
   # "PIZZA_OPERATION_MANAGER" should be able to:
   # - see a list of available toppings
   # - allowed to add a new topping
   # - allowed to delete an existing topping
+
+
+  # TODO: More than likely going to need to revisit this implementation of
+  # checking permissions if more than two permissions may perform the same action.
+  # UPDATE:
+  # Yes, after re-reading the spec
+
+
   # "PIZZA_CHEF"
   # - allowed to see a list of existing pizzas and their toppings
   # - allowed to create a new pizza and add toppings to it
@@ -53,7 +59,8 @@ defmodule Pizzas.Impl do
     @create_pizza => [@pizza_application_maker, @pizza_chef],
     @add_toppings => [@pizza_application_maker, @pizza_chef],
     @list_pizzas => [@pizza_application_maker, @pizza_chef],
-    @delete_pizza => [@pizza_application_maker, @pizza_chef]
+    @delete_pizza => [@pizza_application_maker, @pizza_chef],
+    @create_topping => [@pizza_application_maker, @pizza_operation_manager]
   }
 
   # TODO: This needs to be incorporated into the auth lib
@@ -81,11 +88,25 @@ defmodule Pizzas.Impl do
     end
   end
 
-  def create_pizza(pizza_name) do
+  def create_pizza(name) do
     %Pizza{}
-    |> Pizza.changeset(%{name: pizza_name})
+    |> Pizza.changeset(%{name: name})
     |> Repo.insert()
-    |> handle_create_pizza_result()
+    |> handle_creation_result()
+  end
+
+  def create_topping(permission, name) do
+    # TODO: Repition going on. Should use an anon func to pass in the action & :ok logic
+    # And move the general case stuff out into a separate function.
+    case @create_topping |> valid_permission?(@permissions, permission) do
+      :ok ->
+        %Toppings{}
+          |> Pizza.changeset(%{name: name})
+          |> Repo.insert()
+          |> handle_creation_result()
+      {:error, response} ->
+        {:error, response}
+    end
   end
 
   def add_toppings_to_pizza(permission, pizza_id, topping_id_list) do
@@ -136,7 +157,10 @@ defmodule Pizzas.Impl do
 
   def retrieve_pizzas, do: Repo.all(Pizza)
 
+  def retrieve_topping_by_id(id), do: Repo.get!(Toppings, id)
+
   def retrieve_toppings, do: Repo.all(Toppings)
+
 
   @doc """
     The pizza's id and name will already be available on the ui
@@ -161,12 +185,10 @@ defmodule Pizzas.Impl do
   ##############
   ## PRIVATES ##
   ##############
+  defp handle_creation_result({:ok, pizza = %Pizza{id: id, name: name}}), do: {:ok, id}
+  defp handle_creation_result({:ok, topping = %Toppings{id: id, name: name}}), do: {:ok, id}
 
-  defp handle_create_pizza_result({:ok, pizza = %Pizza{id: id, name: name}}) do
-    {:ok, id}
-  end
-
-  defp handle_create_pizza_result({:error, changeset = %Changeset{valid?: false, errors: errors}}) do
+  defp handle_creation_result({:error, changeset = %Changeset{valid?: false, errors: errors}}) do
     errors =
       changeset
       |> Changeset.traverse_errors(fn {msg, opts} ->

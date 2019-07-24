@@ -51,6 +51,11 @@ defmodule PizzasImplTest do
     assert "Supreme" == pizza.name
   end
 
+  test "creates a topping" do
+    {:ok, id} = Pizzas.create_topping("PIZZA_OPERATION_MANAGER", "Olives")
+    assert %Dbstore.Toppings{name: "Olives"} = Pizzas.retrieve_topping_by_id(id)
+  end
+
   test "retrieves a list of all toppings" do
     assert [
       %Dbstore.Toppings{name: "Pineapple"},

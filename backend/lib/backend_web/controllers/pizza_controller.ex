@@ -18,6 +18,7 @@ defmodule BackendWeb.PizzaController do
       message: "You're unable to perform that action."
     }
   }
+
   @create_pizza_success_response %{
     status: 201,
     payload: %{
@@ -91,7 +92,6 @@ defmodule BackendWeb.PizzaController do
             # {:error, response = @create_pizza_duplicate_fail_response} -> response
             _ -> %{status: 400, payload: %{message: "Whoops, something went wrong."}}
           end
-
     conn |> Helpers.send_client_response(status, payload)
   end
 end

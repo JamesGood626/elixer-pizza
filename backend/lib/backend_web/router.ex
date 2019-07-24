@@ -34,5 +34,6 @@ defmodule BackendWeb.Router do
     # PizzaControllers
     post("/pizza", PizzaController, :create_pizza)
     post("/pizza/add-toppings", PizzaController, :add_toppings)
+    post("/toppings", ToppingController, :create_topping)
   end
 end
