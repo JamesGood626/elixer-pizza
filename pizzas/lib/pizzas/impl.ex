@@ -36,7 +36,7 @@ defmodule Pizzas.Impl do
   # Implement in toppings_controller
   # "PIZZA_OPERATION_MANAGER" should be able to:
   # - see a list of available toppings
-  # - allowed to add a new topping
+  # - allowed to add a new topping <- CHECK
   # - allowed to delete an existing topping
 
 
@@ -82,6 +82,7 @@ defmodule Pizzas.Impl do
     case @create_pizza |> valid_permission?(@permissions, permission) do
       :ok ->
         create_pizza(pizza_name)
+        # TODO: Error handling still needs to occur here.
         |> create_pizza_toppings(topping_id_list)
       {:error, response} ->
         {:error, response}
@@ -101,7 +102,7 @@ defmodule Pizzas.Impl do
     case @create_topping |> valid_permission?(@permissions, permission) do
       :ok ->
         %Toppings{}
-          |> Pizza.changeset(%{name: name})
+          |> Toppings.changeset(%{name: name})
           |> Repo.insert()
           |> handle_creation_result()
       {:error, response} ->
@@ -113,7 +114,9 @@ defmodule Pizzas.Impl do
     case @create_pizza |> valid_permission?(@permissions, permission) do
       :ok ->
         create_pizza_toppings({:ok, pizza_id}, topping_id_list, true)
-        # TODO: Why did I comment this out?
+        # TODO: Why did I comment this out? I don't think I've
+        # gotten around to actually using this add_toppings_to_pizza function yet?
+        # At least not in the controller, anyhow. So... that's why.
         # |> handle_add_toppings_result()
       {:error, response} ->
         {:error, response}
@@ -188,6 +191,16 @@ defmodule Pizzas.Impl do
   defp handle_creation_result({:ok, pizza = %Pizza{id: id, name: name}}), do: {:ok, id}
   defp handle_creation_result({:ok, topping = %Toppings{id: id, name: name}}), do: {:ok, id}
 
+  @doc """
+    errors as it appears in the changeset as the second param to this function:
+    [
+      name: {"That topping name is already taken",
+      [validation: :unsafe_unique, fields: [:name]]}
+    ]
+
+    errors after traverse and format_errors:
+    %{name: ["That topping name is already taken"]}
+  """
   defp handle_creation_result({:error, changeset = %Changeset{valid?: false, errors: errors}}) do
     errors =
       changeset
