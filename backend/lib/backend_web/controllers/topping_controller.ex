@@ -18,6 +18,7 @@ defmodule BackendWeb.ToppingController do
     status: 201,
     payload: %{
       message: "Topping successfully created!"
+      # topping_id inserted here from inside controller
     }
   }
 
@@ -33,24 +34,15 @@ defmodule BackendWeb.ToppingController do
   def create_topping(conn, %{"name" => name}) do
     %{current_user: current_user} = conn.assigns
     %{status: status, payload: payload} =
+      # TODO: Remember that you need to do some refactor this user_with_permission into
+      #       the auth plug or something so that this with block may be moved into Pizzas.Impl
       with {_user_id, permission} <- Accounts.retrieve_user_with_permission(current_user),
-            {:ok, id} <- Pizzas.create_topping(permission, name)
+            {:ok, payload = @create_topping_success_response} <- Pizzas.create_topping(permission, name)
           do
-            {_, response} = @create_topping_success_response |> get_and_update_in([:payload, :topping_id], &{&1, id})
-            response
+            payload
           else
             {:error, response = @permission_denied_response} -> response
-            {:error, response = %{ name: ["That topping name is already taken"] }} ->
-              # TODO: Had to compensate for this. Duplicate pizza case in pizza_controller doesn't require
-              # this because of create_pizza_toppings/2 which takes {:error, message} as its first arg.
-              # Need to get a more standarized approach to catching that for all resources that
-              # potentially return Ecto.Changeset errors.
-              %{
-                status: 400,
-                payload: %{
-                  message: response
-                }
-              }
+            {:error, response = @create_topping_duplicate_fail_response} -> response
             _ -> %{status: 400, payload: %{message: "Whoops, something went wrong."}}
           end
 

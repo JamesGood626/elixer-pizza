@@ -32,6 +32,7 @@ defmodule BackendWeb.UserController do
 
   def logout(conn, _params) do
     conn
+    # Can delete_session fail?
     |> delete_session(:session_token)
     |> Helpers.send_client_response(200, %{
       message: "You've successfully logged out!"

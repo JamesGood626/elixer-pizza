@@ -25,6 +25,7 @@ defmodule Pizzas.Impl do
     },
     status: 201
   }
+
   @toppings_added_response %{
     payload: %{
       message: "Toppings successfully added!"
@@ -38,6 +39,10 @@ defmodule Pizzas.Impl do
   # - see a list of available toppings
   # - allowed to add a new topping <- CHECK
   # - allowed to delete an existing topping
+   # "PIZZA_CHEF"
+  # - allowed to see a list of existing pizzas and their toppings
+  # - allowed to create a new pizza and add toppings to it
+  # - allowed to delete an existing pizza
 
 
   # TODO: More than likely going to need to revisit this implementation of
@@ -45,11 +50,6 @@ defmodule Pizzas.Impl do
   # UPDATE:
   # Yes, after re-reading the spec
 
-
-  # "PIZZA_CHEF"
-  # - allowed to see a list of existing pizzas and their toppings
-  # - allowed to create a new pizza and add toppings to it
-  # - allowed to delete an existing pizza
   # "PIZZA_APPLICATION_MAKER"
   # Is only listed for the backend stories, but I assume this requires an admin
   # interface, so the permissions map will need to look as such:
@@ -105,6 +105,7 @@ defmodule Pizzas.Impl do
           |> Toppings.changeset(%{name: name})
           |> Repo.insert()
           |> handle_creation_result()
+          |> format_response(:create_topping)
       {:error, response} ->
         {:error, response}
     end
@@ -125,6 +126,13 @@ defmodule Pizzas.Impl do
 
   def create_pizza_toppings({:error, message}, _), do: {:error, %{payload: %{message: message}, status: 400}}
 
+  @doc """
+    The output of create_pizza/2, which is called from within create_pizza_with_toppings/3
+    is piped into this function.
+
+    Whereas the add_toppings_to_pizza functions utilizes this function, but will never hit
+    the :error function clause case.
+  """
   def create_pizza_toppings({:ok, pizza_id}, topping_id_list, add_toppings_request \\ false) do
     toppings =
       topping_id_list
@@ -226,5 +234,29 @@ defmodule Pizzas.Impl do
     Enum.reduce(opts, msg, fn {key, value}, acc ->
       String.replace(acc, "%{#{key}}", to_string(value))
     end)
+  end
+
+  defp format_response({:ok, id}, :create_topping) do
+    # {_, payload} = @create_topping_success_response |> get_and_update_in([:payload, :topping_id], &{&1, id})
+    {:ok, %{
+      status: 201,
+      payload: %{
+        message: "Topping successfully created!",
+        topping_id: id
+      }
+    }}
+  end
+
+  defp format_response({:error, errors}, :create_topping) do
+    {:error, error_response(errors)}
+  end
+
+  defp error_response(errors) do
+    %{
+      status: 400,
+      payload: %{
+        message: errors
+      }
+    }
   end
 end
