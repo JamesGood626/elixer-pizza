@@ -17,6 +17,8 @@ defmodule Pizzas.Impl do
   @add_toppings "ADD_TOPPINGS"
   @list_pizzas "LIST_PIZZAS"
   @delete_pizza "DELETE_PIZZA"
+  @list_toppings "LIST_TOPPINGS"
+  @delete_topping "DELETE_TOPPING"
 
   # Responses
   @pizza_created_response %{
@@ -36,9 +38,7 @@ defmodule Pizzas.Impl do
   # TODO:
   # Implement in toppings_controller
   # "PIZZA_OPERATION_MANAGER" should be able to:
-  # - see a list of available toppings
-  # - allowed to add a new topping <- CHECK
-  # - allowed to delete an existing topping
+  # - allowed to delete an existing topping <- Inprogress
    # "PIZZA_CHEF"
   # - allowed to see a list of existing pizzas and their toppings
   # - allowed to create a new pizza and add toppings to it
@@ -60,7 +60,9 @@ defmodule Pizzas.Impl do
     @add_toppings => [@pizza_application_maker, @pizza_chef],
     @list_pizzas => [@pizza_application_maker, @pizza_chef],
     @delete_pizza => [@pizza_application_maker, @pizza_chef],
-    @create_topping => [@pizza_application_maker, @pizza_operation_manager]
+    @create_topping => [@pizza_application_maker, @pizza_operation_manager],
+    @list_toppings => [@pizza_application_maker, @pizza_operation_manager],
+    @delete_topping => [@pizza_application_maker, @pizza_operation_manager]
   }
 
   # TODO: This needs to be incorporated into the auth lib
@@ -106,6 +108,25 @@ defmodule Pizzas.Impl do
           |> Repo.insert()
           |> handle_creation_result()
           |> format_response(:create_topping)
+      {:error, response} ->
+        {:error, response}
+    end
+  end
+
+  def fetch_toppings_list(permission) do
+    case @list_toppings |> valid_permission?(@permissions, permission) do
+      :ok ->
+        query = from t in "toppings", select: %{id: t.id, name: t.name}
+        Repo.all(query)
+      {:error, response} ->
+        {:error, response}
+    end
+  end
+
+  def delete_topping(permission, id) do
+    case @delete_topping |> valid_permission?(@permissions, permission) do
+      :ok ->
+        from(t in "toppings", where: t.id == ^id) |> Repo.delete_all() |> IO.inspect()
       {:error, response} ->
         {:error, response}
     end

@@ -48,4 +48,34 @@ defmodule BackendWeb.ToppingController do
 
     conn |> Helpers.send_client_response(status, payload)
   end
+
+  def retrieve_toppings(conn, _) do
+    %{current_user: current_user} = conn.assigns
+    %{status: status, payload: payload} =
+      with {_user_id, permission} <- Accounts.retrieve_user_with_permission(current_user),
+           topping_list = Pizzas.fetch_toppings_list(permission)
+        do
+          %{ status: 200, payload: topping_list }
+        else
+          {:error, response = @permission_denied_response} -> response
+          _ -> %{status: 400, payload: %{message: "Whoops, something went wrong."}}
+        end
+
+    conn |> Helpers.send_client_response(status, payload)
+  end
+
+  def delete_topping(conn, %{"id" => id}) do
+    %{current_user: current_user} = conn.assigns
+    %{status: status, payload: payload} =
+      with {_user_id, permission} <- Accounts.retrieve_user_with_permission(current_user),
+           {1, _} = Pizzas.delete_topping(permission, id)
+        do
+          %{status: 200, payload: %{message: "Topping successfully deleted"}}
+        else
+          {:error, response = @permission_denied_response} -> response
+          _ -> %{status: 400, payload: %{message: "Whoops, something went wrong."}}
+        end
+
+    conn |> Helpers.send_client_response(status, payload)
+  end
 end

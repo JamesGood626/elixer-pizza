@@ -4,8 +4,12 @@ defmodule BackendWeb.ToppingControllerTest do
   alias Accounts
   alias Pizzas
 
-  @valid_input %{
+  @topping_one_input %{
     name: "Maple Syrup"
+  }
+
+  @topping_two_input %{
+    name: "Sardines"
   }
 
   @admin_user_input %{
@@ -30,6 +34,17 @@ defmodule BackendWeb.ToppingControllerTest do
         "name" => ["That topping name is already taken"]
       }
     }
+  }
+
+  @list_toppings_success_response %{
+    "data" => [
+      %{"name" => "Maple Syrup"},
+      %{"name" => "Sardines"}
+    ]
+  }
+
+  @delete_topping_success_response %{
+    "data" => %{ "message" => "Topping successfully deleted" }
   }
 
   # "setup_all" is called once per module before any test runs
@@ -60,7 +75,7 @@ defmodule BackendWeb.ToppingControllerTest do
   describe "POST /api/toppings" do
     test "user logged in w/ PIZZA_APPLICATION_MAKER permission can create a topping", %{conn: conn} do
       conn = post(conn, "/api/login", @admin_user_input)
-      conn = post(conn, "/api/toppings", @valid_input)
+      conn = post(conn, "/api/toppings", @topping_one_input)
       %{"data" => %{"topping_id" => id}} = json_response(conn, 201)
       assert @create_topping_success_response = json_response(conn, 201)
       assert %Dbstore.Toppings{name: "Maple Syrup"} = Pizzas.retrieve_topping_by_id(id)
@@ -68,9 +83,29 @@ defmodule BackendWeb.ToppingControllerTest do
 
     test "topping creation fails if name is already taken", %{conn: conn} do
       conn = post(conn, "/api/login", @admin_user_input)
-      conn = post(conn, "/api/toppings", @valid_input)
-      conn = post(conn, "/api/toppings", @valid_input)
-      assert @create_topping_duplicate_fail_response == json_response(conn, 400)
+      conn = post(conn, "/api/toppings", @topping_one_input)
+      conn = post(conn, "/api/toppings", @topping_one_input)
+      assert @create_topping_duplicate_fail_response === json_response(conn, 400)
+    end
+  end
+
+  describe "GET /api/toppings" do
+    test "retrieves a list of toppings", %{conn: conn} do
+      conn = post(conn, "/api/login", @admin_user_input)
+      conn = post(conn, "/api/toppings", @topping_one_input)
+      conn = post(conn, "/api/toppings", @topping_two_input)
+      conn = get(conn, "/api/toppings")
+      assert @list_toppings_success_response = json_response(conn, 200)
+    end
+  end
+
+  describe "POST /api/toppings/delete" do
+    test "deletes the topping of a given id", %{conn: conn} do
+      conn = post(conn, "/api/login", @admin_user_input)
+      conn = post(conn, "/api/toppings", @topping_one_input)
+      %{"data" => %{"topping_id" => id}} = json_response(conn, 201)
+      conn = post(conn, "/api/toppings/delete", %{id: id})
+      assert @delete_topping_success_response === json_response(conn, 200)
     end
   end
 end
