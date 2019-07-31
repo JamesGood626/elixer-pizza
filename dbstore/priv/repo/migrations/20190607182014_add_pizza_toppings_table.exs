@@ -3,8 +3,8 @@ defmodule Dbstore.Repo.Migrations.AddPizzaToppingsTable do
 
   def change do
     create table("pizza_toppings") do
-      add(:pizza_id, references("pizzas"), null: false)
-      add(:topping_id, references("toppings"), null: false)
+      add(:pizza_id, references(:pizzas), on_delete: :delete_all, null: false)
+      add(:topping_id, references(:toppings), on_delete: :delete_all,  null: false)
       timestamps()
     end
 

@@ -1,6 +1,7 @@
 defmodule PizzasImplTest do
   use ExUnit.Case, async: true
-  alias Dbstore.{Repo, Pizza, Toppings}
+  import Ecto.Query
+  alias Dbstore.{Repo, Pizza, Toppings, PizzaToppings}
   alias Pizzas
 
   # Responses
@@ -10,6 +11,13 @@ defmodule PizzasImplTest do
     },
     status: 201
   }
+
+  @delete_pizza_success_response {:ok, %{
+    status: 201,
+    payload: %{
+      message: "Pizza successfully deleted!",
+    }
+  }}
 
   setup_all do
     Repo.insert(%Toppings{name: "Pineapple"})
@@ -52,7 +60,7 @@ defmodule PizzasImplTest do
   end
 
   test "creates a topping" do
-    {:ok, id} = Pizzas.create_topping("PIZZA_OPERATION_MANAGER", "Olives")
+    {:ok, %{ payload: %{ topping_id: id } } } = Pizzas.create_topping("PIZZA_OPERATION_MANAGER", "Olives")
     assert %Dbstore.Toppings{name: "Olives"} = Pizzas.retrieve_topping_by_id(id)
   end
 
@@ -74,9 +82,13 @@ defmodule PizzasImplTest do
 
   # end
 
-  # test "delete pizza" do
-
-  # end
+  test "deletes a pizza, and all of its pizza_topping associations", %{toppings_id_list: topping_id_list} do
+    {:ok, %Pizza{id: pizza_id}} = Repo.insert(%Pizza{name: "Pineapple Surprise"})
+    assert @toppings_added_response === Pizzas.add_toppings_to_pizza("PIZZA_CHEF", pizza_id, topping_id_list)
+    assert @delete_pizza_success_response = Pizzas.delete_pizza("PIZZA_CHEF", pizza_id)
+    # assert "boom" = from(t in "pizza_toppings", select: t.id) |> Repo.all()
+    assert nil === Pizzas.retrieve_pizza_by_id(pizza_id)
+  end
 
   # test "duplicate pizza creation fails" do
 

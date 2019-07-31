@@ -20,6 +20,12 @@ defmodule Pizzas.Impl do
   @list_toppings "LIST_TOPPINGS"
   @delete_topping "DELETE_TOPPING"
 
+  # TODO:
+  # - Implement list pizzas final thing.
+  # - csrf endpoint ill-advised?
+  # - Then refactor. Auth module, and service functions to be cleaner. (Will do this after Frontend is done.)
+
+
   # Responses
   @pizza_created_response %{
     payload: %{
@@ -36,12 +42,8 @@ defmodule Pizzas.Impl do
   }
 
   # TODO:
-  # Implement in toppings_controller
-  # "PIZZA_OPERATION_MANAGER" should be able to:
-  # - allowed to delete an existing topping <- Inprogress
    # "PIZZA_CHEF"
   # - allowed to see a list of existing pizzas and their toppings
-  # - allowed to create a new pizza and add toppings to it
   # - allowed to delete an existing pizza
 
 
@@ -98,6 +100,22 @@ defmodule Pizzas.Impl do
     |> handle_creation_result()
   end
 
+  # TODO: Make sure you send back the ids of the pizzas when you implement
+  # the list pizzas function.
+  def delete_pizza(permission, id) do
+    case @delete_pizza |> valid_permission?(@permissions, permission) do
+      :ok ->
+        Repo.get(Pizza, id)
+        # |> Ecto.Changeset.no_assoc_constraint(:pizza_toppings)
+        |> Repo.delete()
+        |> format_response(:delete_pizza)
+
+        # from(p in Pizza, where: p.id == ^id) |> Repo.delete_all() |> format_response(:delete_pizza)
+      {:error, response} ->
+          {:error, response}
+    end
+  end
+
   def create_topping(permission, name) do
     # TODO: Repition going on. Should use an anon func to pass in the action & :ok logic
     # And move the general case stuff out into a separate function.
@@ -126,7 +144,7 @@ defmodule Pizzas.Impl do
   def delete_topping(permission, id) do
     case @delete_topping |> valid_permission?(@permissions, permission) do
       :ok ->
-        from(t in "toppings", where: t.id == ^id) |> Repo.delete_all() |> IO.inspect()
+        from(t in "toppings", where: t.id == ^id) |> Repo.delete_all()
       {:error, response} ->
         {:error, response}
     end
@@ -183,7 +201,7 @@ defmodule Pizzas.Impl do
     end
   end
 
-  def retrieve_pizza_by_id(id), do: Repo.get!(Pizza, id)
+  def retrieve_pizza_by_id(id), do: Repo.get(Pizza, id)
 
   def retrieve_pizza_by_name(name), do: Repo.get!(Pizza, name)
 
@@ -256,6 +274,18 @@ defmodule Pizzas.Impl do
       String.replace(acc, "%{#{key}}", to_string(value))
     end)
   end
+
+  defp format_response({:ok, pizza}, :delete_pizza) do
+    {:ok, %{
+      status: 201,
+      payload: %{
+        message: "Pizza successfully deleted!",
+        deleted_pizza: pizza
+      }
+    }}
+  end
+
+  defp format_response({_, _err}, :delete_pizza), do: "Unable to delete."
 
   defp format_response({:ok, id}, :create_topping) do
     # {_, payload} = @create_topping_success_response |> get_and_update_in([:payload, :topping_id], &{&1, id})

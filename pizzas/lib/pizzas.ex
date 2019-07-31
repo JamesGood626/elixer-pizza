@@ -9,6 +9,7 @@ defmodule Pizzas do
   defdelegate retrieve_pizza_by_name(name), to: Pizzas.Impl
   defdelegate retrieve_pizza_toppings_by_pizzaid(pizza_id), to: Pizzas.Impl
   defdelegate retrieve_pizzas, to: Pizzas.Impl
+  defdelegate delete_pizza(permission, id), to: Pizzas.Impl
   defdelegate create_topping(permission, name), to: Pizzas.Impl
   defdelegate fetch_toppings_list(permission), to: Pizzas.Impl
   defdelegate retrieve_toppings, to: Pizzas.Impl
