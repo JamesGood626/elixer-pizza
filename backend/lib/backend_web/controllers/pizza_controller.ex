@@ -1,6 +1,7 @@
 defmodule BackendWeb.PizzaController do
   use BackendWeb, :controller
   import Backend.AuthPlug
+  import Plug
   alias Backend.Helpers
   alias Pizzas
   alias Accounts
@@ -22,6 +23,7 @@ defmodule BackendWeb.PizzaController do
   @create_pizza_success_response %{
     status: 201,
     payload: %{
+      # pizza_id also a key on this response
       message: "Pizza successfully created!"
     }
   }
@@ -32,6 +34,14 @@ defmodule BackendWeb.PizzaController do
       message: %{
         name: ["That pizza name is already taken"]
       }
+    }
+  }
+
+  @delete_pizza_success_response %{
+    status: 200,
+    payload: %{
+      # deleted_pizza is also a key, a map containing id and name
+      message: "Pizza successfully deleted!"
     }
   }
 
@@ -89,7 +99,20 @@ defmodule BackendWeb.PizzaController do
             @add_toppings_success_response
           else
             {:error, response = @permission_denied_response} -> response
-            # {:error, response = @create_pizza_duplicate_fail_response} -> response
+            _ -> %{status: 400, payload: %{message: "Whoops, something went wrong."}}
+          end
+    conn |> Helpers.send_client_response(status, payload)
+  end
+
+  def delete_pizza(conn = %Plug.Conn{params: %{"id" => pizza_id}}, _) do
+    %{current_user: current_user} = conn.assigns
+    %{status: status, payload: payload} =
+      with {user_id, permission} <- Accounts.retrieve_user_with_permission(current_user),
+            {:ok, response = @delete_pizza_success_response} <- Pizzas.delete_pizza(permission, pizza_id)
+          do
+            response
+          else
+            {:error, response = @permission_denied_response} -> response
             _ -> %{status: 400, payload: %{message: "Whoops, something went wrong."}}
           end
     conn |> Helpers.send_client_response(status, payload)

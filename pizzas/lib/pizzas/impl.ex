@@ -24,7 +24,8 @@ defmodule Pizzas.Impl do
   # - Implement list pizzas final thing.
   # - csrf endpoint ill-advised?
   # - Then refactor. Auth module, and service functions to be cleaner. (Will do this after Frontend is done.)
-
+  # - Tests could be improved by testing that roles which do not have permission to perform an action
+  #   receive the correct response. Later.
 
   # Responses
   @pizza_created_response %{
@@ -46,17 +47,6 @@ defmodule Pizzas.Impl do
   # - allowed to see a list of existing pizzas and their toppings
   # - allowed to delete an existing pizza
 
-
-  # TODO: More than likely going to need to revisit this implementation of
-  # checking permissions if more than two permissions may perform the same action.
-  # UPDATE:
-  # Yes, after re-reading the spec
-
-  # "PIZZA_APPLICATION_MAKER"
-  # Is only listed for the backend stories, but I assume this requires an admin
-  # interface, so the permissions map will need to look as such:
-  # %{ "LIST_PIZZAS" => ["PIZZA_APPLICATION_MAKER", "PIZZA_CHEF"] }
-  # And that will require iterating over the map inside of valid_permission?
   @permissions %{
     @create_pizza => [@pizza_application_maker, @pizza_chef],
     @add_toppings => [@pizza_application_maker, @pizza_chef],
@@ -73,7 +63,7 @@ defmodule Pizzas.Impl do
   defp valid_permission?(action, permissions, permission) do
     permissions
     |> Map.get(action, permission)
-    |> Enum.any?(fn x -> x == permission end)
+    |> Enum.any?(fn x -> x === permission end)
     |> case do
       true ->
         :ok
@@ -106,11 +96,9 @@ defmodule Pizzas.Impl do
     case @delete_pizza |> valid_permission?(@permissions, permission) do
       :ok ->
         Repo.get(Pizza, id)
-        # |> Ecto.Changeset.no_assoc_constraint(:pizza_toppings)
         |> Repo.delete()
         |> format_response(:delete_pizza)
 
-        # from(p in Pizza, where: p.id == ^id) |> Repo.delete_all() |> format_response(:delete_pizza)
       {:error, response} ->
           {:error, response}
     end
@@ -197,7 +185,9 @@ defmodule Pizzas.Impl do
       true ->
         @toppings_added_response
       false ->
-        @pizza_created_response
+        @pizza_created_response |> update_nested([:payload], pizza_id, fn x ->
+          {nil, Map.put(x, :pizza_id, pizza_id)}
+        end)
     end
   end
 
@@ -261,6 +251,11 @@ defmodule Pizzas.Impl do
     {:error, errors}
   end
 
+  defp update_nested(map, keys, val, func) do
+    {nil, response} = map |> get_and_update_in(keys, func)
+    response
+  end
+
   # TODO: this logic (format_error) is duplicated in /accounts/lib/accounts/impl.ex
   # Perhaps move this helper error handling logic into dbstore so that
   # it may be imported here.
@@ -275,12 +270,12 @@ defmodule Pizzas.Impl do
     end)
   end
 
-  defp format_response({:ok, pizza}, :delete_pizza) do
+  defp format_response({:ok, %{id: id, name: name}}, :delete_pizza) do
     {:ok, %{
-      status: 201,
+      status: 200,
       payload: %{
         message: "Pizza successfully deleted!",
-        deleted_pizza: pizza
+        deleted_pizza: %{id: id, name: name}
       }
     }}
   end

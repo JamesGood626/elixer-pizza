@@ -60,14 +60,14 @@ defmodule BackendWeb.PizzaControllerTest do
     :ok = Ecto.Adapters.SQL.Sandbox.checkout(Dbstore.Repo)
   end
 
-  describe "POST /api/pizza" do
+  describe "/api/pizza" do
     test "user w/ PIZZA_APPLICATION_MAKER permission can create a pizza", %{
       conn: conn,
       topping_ids: topping_ids
     } do
       conn = post(conn, "/api/login", @admin_user_input)
       conn = post(conn, "/api/pizza", Map.put(@valid_input, :topping_ids, topping_ids))
-      assert @create_pizza_success_response == json_response(conn, 201)
+      assert @create_pizza_success_response = json_response(conn, 201)
     end
 
     test "pizza creation fails if name is already taken", %{conn: conn, topping_ids: topping_ids} do
@@ -75,7 +75,16 @@ defmodule BackendWeb.PizzaControllerTest do
       valid_input = Map.put(@valid_input, :topping_ids, topping_ids)
       conn = post(conn, "/api/pizza", valid_input)
       conn = post(conn, "/api/pizza", valid_input)
-      assert @create_pizza_duplicate_fail_response == json_response(conn, 400)
+      assert @create_pizza_duplicate_fail_response === json_response(conn, 400)
+    end
+
+    test "a user may delete a pizza", %{conn: conn, topping_ids: topping_ids} do
+      conn = post(conn, "/api/login", @admin_user_input)
+      valid_input = Map.put(@valid_input, :topping_ids, topping_ids)
+      conn = post(conn, "/api/pizza", valid_input)
+      %{ "data" => %{ "pizza_id" => pizza_id } } = json_response(conn, 201)
+      conn = delete(conn, "/api/pizza/#{pizza_id}")
+      %{"data" => %{ "message" => "Pizza successfully deleted!" }} = json_response(conn, 200)
     end
   end
 end

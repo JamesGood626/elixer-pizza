@@ -13,10 +13,18 @@ defmodule PizzasImplTest do
   }
 
   @delete_pizza_success_response {:ok, %{
-    status: 201,
+    status: 200,
     payload: %{
       message: "Pizza successfully deleted!",
     }
+  }}
+
+  @pizza_create_duplicate_response {:error,
+  %{
+    payload: %{
+      message: %{name: ["That pizza name is already taken"]}
+    },
+    status: 400
   }}
 
   setup_all do
@@ -42,7 +50,7 @@ defmodule PizzasImplTest do
   test "create new pizza", %{toppings_id_list: topping_id_list} do
     Pizzas.create_pizza_with_toppings("PIZZA_CHEF", "Supreme", topping_id_list)
     [pizza] = Pizzas.retrieve_pizzas()
-    assert "Supreme" == pizza.name
+    assert "Supreme" === pizza.name
   end
 
   test "retrieve all pizzas", %{toppings_id_list: topping_id_list} do
@@ -53,10 +61,15 @@ defmodule PizzasImplTest do
     assert length(pizzas) === 3
   end
 
-  test "creates a pizza" do
-    {:ok, %Pizza{id: pizza_id}} = Repo.insert(%Pizza{name: "Supreme"})
+  test "creates a pizza", %{toppings_id_list: topping_id_list} do
+    %{payload: %{pizza_id: pizza_id}} = Pizzas.create_pizza_with_toppings("PIZZA_CHEF", "Supreme", topping_id_list)
     pizza = Pizzas.retrieve_pizza_by_id(pizza_id)
-    assert "Supreme" == pizza.name
+    assert "Supreme" === pizza.name
+  end
+
+  test "duplicate pizza creation fails", %{toppings_id_list: topping_id_list} do
+    %{payload: %{pizza_id: pizza_id}} = Pizzas.create_pizza_with_toppings("PIZZA_CHEF", "Supreme", topping_id_list)
+    assert @pizza_create_duplicate_response === Pizzas.create_pizza_with_toppings("PIZZA_CHEF", "Supreme", topping_id_list)
   end
 
   test "creates a topping" do
@@ -74,23 +87,15 @@ defmodule PizzasImplTest do
 
   test "adds toppings to pizza", %{toppings_id_list: topping_id_list} do
     {:ok, %Pizza{id: pizza_id}} = Repo.insert(%Pizza{name: "Pineapple Surprise"})
-    assert @toppings_added_response == Pizzas.add_toppings_to_pizza("PIZZA_CHEF", pizza_id, topping_id_list)
-    assert ["Pineapple", "Sausage", "Jalapenos"] == Pizzas.retrieve_pizza_toppings_by_pizzaid(pizza_id)
+    assert @toppings_added_response === Pizzas.add_toppings_to_pizza("PIZZA_CHEF", pizza_id, topping_id_list)
+    assert ["Pineapple", "Sausage", "Jalapenos"] === Pizzas.retrieve_pizza_toppings_by_pizzaid(pizza_id)
   end
-
-  # test "update pizza" do
-
-  # end
 
   test "deletes a pizza, and all of its pizza_topping associations", %{toppings_id_list: topping_id_list} do
     {:ok, %Pizza{id: pizza_id}} = Repo.insert(%Pizza{name: "Pineapple Surprise"})
     assert @toppings_added_response === Pizzas.add_toppings_to_pizza("PIZZA_CHEF", pizza_id, topping_id_list)
     assert @delete_pizza_success_response = Pizzas.delete_pizza("PIZZA_CHEF", pizza_id)
-    # assert "boom" = from(t in "pizza_toppings", select: t.id) |> Repo.all()
+    assert [] === from(t in "pizza_toppings", select: t.id) |> Repo.all()
     assert nil === Pizzas.retrieve_pizza_by_id(pizza_id)
   end
-
-  # test "duplicate pizza creation fails" do
-
-  # end
 end
