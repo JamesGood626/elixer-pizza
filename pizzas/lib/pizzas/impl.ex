@@ -42,6 +42,13 @@ defmodule Pizzas.Impl do
     status: 201
   }
 
+  @bad_request_response %{
+    payload: %{
+      message: "You're unable to perform that action."
+    },
+    status: 400
+  }
+
   # TODO:
    # "PIZZA_CHEF"
   # - allowed to see a list of existing pizzas and their toppings
@@ -68,7 +75,7 @@ defmodule Pizzas.Impl do
       true ->
         :ok
       false ->
-        {:error, %{payload: %{message: "You're unable to perform that action."}, status: 400}}
+        {:error, @bad_request_response}
     end
   end
 

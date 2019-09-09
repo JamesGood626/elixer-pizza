@@ -27,6 +27,7 @@ defmodule BackendWeb.UserController do
     # lines 27 and 28 clear them:
     # conn = Map.put(conn, :body_params, %{})
     # conn = Map.put(conn, :params, %{})
+
     Helpers.set_session_data(conn, session_data) |> Helpers.send_client_response(status, payload)
   end
 

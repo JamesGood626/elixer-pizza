@@ -49,7 +49,7 @@ defmodule BackendWeb.ToppingController do
     conn |> Helpers.send_client_response(status, payload)
   end
 
-  def retrieve_toppings(conn, _) do
+  def list_toppings(conn, _) do
     %{current_user: current_user} = conn.assigns
     %{status: status, payload: payload} =
       with {_user_id, permission} <- Accounts.retrieve_user_with_permission(current_user),

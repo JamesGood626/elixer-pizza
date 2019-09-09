@@ -33,9 +33,10 @@ defmodule BackendWeb.Router do
 
     # PizzaControllers
     post("/pizza", PizzaController, :create_pizza)
+    # get("/pizza", PizzaController, :list_pizza)
     delete("/pizza/:id", PizzaController, :delete_pizza)
     post("/pizza/toppings", PizzaController, :add_toppings)
-    get("/toppings", ToppingController, :retrieve_toppings)
+    get("/toppings", ToppingController, :list_toppings)
     post("/toppings", ToppingController, :create_topping)
     post("/toppings/delete", ToppingController, :delete_topping)
   end
