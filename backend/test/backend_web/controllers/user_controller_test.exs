@@ -43,6 +43,12 @@ defmodule BackendWeb.UserControllerTest do
     :ok = Ecto.Adapters.SQL.Sandbox.checkout(Dbstore.Repo)
   end
 
+  test "GET /api/csrf", %{conn: conn} do
+    conn = get(conn, "/api/csrf")
+    %{"csrf_token" => csrf_token} = json_response(conn, 200)
+    assert String.length(csrf_token) === 56
+  end
+
   test "POST /api/signup_pizza_ops_manager", %{conn: conn} do
     conn = post(conn, "/api/signup_pizza_ops_manager", @valid_input)
     assert @signup_success_response = json_response(conn, 201)

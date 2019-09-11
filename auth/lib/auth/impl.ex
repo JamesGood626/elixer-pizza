@@ -39,6 +39,9 @@ defmodule Auth.Impl do
       hashed_remember_token ->
         {:ok, {remember_token, hashed_remember_token}}
 
+      # TODO: Got an error saying this line will never match due to line 39.
+      #       Need to see what the result of :crypto.hmac and Base.encode64 can possibly
+      #       be in the event of an error result.
       _ ->
         {:error, "Something went wrong hashing the remember_token"}
     end

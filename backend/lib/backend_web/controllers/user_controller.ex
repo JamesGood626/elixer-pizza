@@ -3,6 +3,11 @@ defmodule BackendWeb.UserController do
   alias Backend.Helpers
   alias Accounts
 
+  def csrf(conn, _params) do
+    csrf_token = get_csrf_token()
+    json(conn, %{csrf_token: csrf_token})
+  end
+
   def signup_pizza_ops_manager(conn, %{"username" => username, "password" => password}) do
     %{status: status, payload: payload, session_data: session_data} =
       Accounts.signup_pizza_ops_manager(%{username: username, password: password})

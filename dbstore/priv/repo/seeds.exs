@@ -10,7 +10,7 @@ Repo.insert!(%Permissions{name: "PIZZA_APPLICATION_MAKER"})
 Repo.insert!(%Permissions{name: "PIZZA_OPERATION_MANAGER"})
 Repo.insert!(%Permissions{name: "PIZZA_CHEF"})
 
-pizza = Repo.insert!(%Pizza{name: "Cheese Olive", user_id: user.id})
+pizza = Repo.insert!(%Pizza{name: "Cheese Olive"})
 pepperoni = Repo.insert!(%Toppings{name: "Pepperoni"})
 pineapple = Repo.insert!(%Toppings{name: "Pineapple"})
 olives = Repo.insert!(%Toppings{name: "Olives"})
