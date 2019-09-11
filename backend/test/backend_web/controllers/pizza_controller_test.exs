@@ -66,10 +66,7 @@ defmodule BackendWeb.PizzaControllerTest do
       topping_ids: topping_ids
     } do
       conn = post(conn, "/api/login", @admin_user_input)
-      IO.puts("LOGGED IN AS THE ADMIN")
       conn = post(conn, "/api/pizza", Map.put(@valid_input, :topping_ids, topping_ids))
-      IO.puts("AFTER CREATE PIZZA")
-      IO.inspect(conn)
       assert @create_pizza_success_response = json_response(conn, 201)
     end
 

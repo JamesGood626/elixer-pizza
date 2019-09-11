@@ -7,7 +7,8 @@ defmodule Backend.AuthPlug do
   # Key for hashing the user's remember_token TODO: (This is duplicated in lib/accounts/impl.ex)
   # Take a similar approach to hash keys just as Salts for hashing a user's pw -> store them in db?
   # TODO: Still needed to look into the reasoning behind doing so.
-  @hash_key "Ahsdujadsnkjadnskja"
+  # WARNING: This is duplicated in the account project's impl.ex file
+  @hash_key "7b8lEvA2aWxGB1f2MhBjhz8YRf1p21fgTxn8Qf6KciM9IJCaJ9aIn4SNna0FybxZ"
 
   def authorize_user(conn, _opts) do
     get_session(conn, :session_token) |> authorize(conn)

@@ -9,6 +9,7 @@ defmodule Accounts.Impl do
   # Key for hashing the user's remember_token TODO: (This is duplicated in backend/temp/auth_plug.ex)
   # mix phx.gen.secret [length]
   # TODO: keep this secret in prod
+  # WARNING: This is duplicated in the backend project's auth_plug.ex file
   @hash_key "7b8lEvA2aWxGB1f2MhBjhz8YRf1p21fgTxn8Qf6KciM9IJCaJ9aIn4SNna0FybxZ"
   @remember_token_bytes 32
 
@@ -69,9 +70,6 @@ defmodule Accounts.Impl do
   def retrieve_user_by_username(username), do: Repo.get_by(User, username: username)
 
   def retrieve_user_with_permission(username) do
-    # TODO: Why is username nil here when creating pizza?
-    IO.puts("THE USERNAME IN THE PROBLEM FUNCTION")
-    IO.inspect(username)
     [user_permission_result | []] =
       from(u in "users",
         join: up in "user_permissions",
