@@ -7,7 +7,9 @@ defmodule Accounts.Impl do
   alias Dbstore.{Repo, User, Permissions}
 
   # Key for hashing the user's remember_token TODO: (This is duplicated in backend/temp/auth_plug.ex)
-  @hash_key "Ahsdujadsnkjadnskja"
+  # mix phx.gen.secret [length]
+  # TODO: keep this secret in prod
+  @hash_key "7b8lEvA2aWxGB1f2MhBjhz8YRf1p21fgTxn8Qf6KciM9IJCaJ9aIn4SNna0FybxZ"
   @remember_token_bytes 32
 
   # User Permissions
@@ -67,6 +69,9 @@ defmodule Accounts.Impl do
   def retrieve_user_by_username(username), do: Repo.get_by(User, username: username)
 
   def retrieve_user_with_permission(username) do
+    # TODO: Why is username nil here when creating pizza?
+    IO.puts("THE USERNAME IN THE PROBLEM FUNCTION")
+    IO.inspect(username)
     [user_permission_result | []] =
       from(u in "users",
         join: up in "user_permissions",
@@ -184,7 +189,12 @@ defmodule Accounts.Impl do
     case Auth.create_session_data(username, @hash_key, @remember_token_bytes) do
       {:ok, {session_data, hashed_remember_token}} ->
         update_user_hashed_remember_token(user_id, hashed_remember_token)
-        {:ok, %{username: username}, session_data}
+        # Retrieving this permission is more of a quick fix...
+        # Should just pass in the permission from the respective signup functions.
+        # And then the login function should retrieve_user_with_permission to avoid
+        # reaching out to the DB four times.
+        permission = retrieve_user_permissions_by_userid(user_id)
+        {:ok, %{username: username, permission: permission}, session_data}
 
       {:error, _msg} ->
         # TODO: Need to check the form of the other errors, and ensure that
@@ -195,10 +205,10 @@ defmodule Accounts.Impl do
 
   defp login_user({:error, response}), do: {:error, response}
 
-  defp format_response({:ok, %{username: username}, session_data}, message) do
+  defp format_response({:ok, %{username: username, permission: permission}, session_data}, message) do
     %{
       status: @created_code,
-      payload: %{message: message, username: username},
+      payload: %{message: message, username: username, permission: permission},
       session_data: session_data
     }
   end
