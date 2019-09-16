@@ -1,5 +1,5 @@
 alias Dbstore.Repo
-alias Dbstore.{User, Pizza, Toppings, Permissions}
+alias Dbstore.{User, Pizza, Topping, Permissions}
 
 {:ok, user} =
   %User{}
@@ -11,9 +11,9 @@ Repo.insert!(%Permissions{name: "PIZZA_OPERATION_MANAGER"})
 Repo.insert!(%Permissions{name: "PIZZA_CHEF"})
 
 pizza = Repo.insert!(%Pizza{name: "Cheese Olive"})
-pepperoni = Repo.insert!(%Toppings{name: "Pepperoni"})
-pineapple = Repo.insert!(%Toppings{name: "Pineapple"})
-olives = Repo.insert!(%Toppings{name: "Olives"})
+pepperoni = Repo.insert!(%Topping{name: "Pepperoni"})
+pineapple = Repo.insert!(%Topping{name: "Pineapple"})
+olives = Repo.insert!(%Topping{name: "Olives"})
 
 Repo.insert_all("pizza_toppings", [
   [

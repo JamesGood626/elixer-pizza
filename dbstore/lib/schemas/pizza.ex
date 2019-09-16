@@ -6,7 +6,7 @@ defmodule Dbstore.Pizza do
     field(:name, :string)
     timestamps()
 
-    many_to_many(:toppings, Dbstore.Toppings, join_through: "pizza_toppings", on_delete: :delete_all)
+    many_to_many(:toppings, Dbstore.Topping, join_through: "pizza_toppings", on_delete: :delete_all)
   end
 
   def changeset(pizza, params \\ %{}) do

@@ -1,6 +1,6 @@
 defmodule BackendWeb.PizzaControllerTest do
   use BackendWeb.ConnCase
-  alias Dbstore.{Repo, Permissions, Toppings}
+  alias Dbstore.{Repo, Permissions, Topping}
   alias Accounts
   alias Pizzas
 
@@ -37,7 +37,7 @@ defmodule BackendWeb.PizzaControllerTest do
     Repo.insert(%Permissions{name: "PIZZA_APPLICATION_MAKER"})
     Repo.insert(%Permissions{name: "PIZZA_OPERATION_MANAGER"})
     Repo.insert(%Permissions{name: "PIZZA_CHEF"})
-    Repo.insert(%Toppings{name: "Pineapple"})
+    Repo.insert(%{name: "Pineapple"})
     # Designated Admin
     Accounts.signup_pizza_app_maker(@admin_user_input)
 
@@ -49,7 +49,7 @@ defmodule BackendWeb.PizzaControllerTest do
       Repo.delete_all("toppings")
     end)
 
-    [%Toppings{id: id} | _] = Pizzas.retrieve_toppings()
+    [%Topping{id: id} | _] = Pizzas.retrieve_toppings()
     {:ok, %{topping_ids: [id]}}
   end
 
@@ -60,7 +60,7 @@ defmodule BackendWeb.PizzaControllerTest do
     :ok = Ecto.Adapters.SQL.Sandbox.checkout(Dbstore.Repo)
   end
 
-  describe "/api/pizza" do
+  describe "POST /api/pizza" do
     test "user w/ PIZZA_APPLICATION_MAKER permission can create a pizza", %{
       conn: conn,
       topping_ids: topping_ids
@@ -77,8 +77,10 @@ defmodule BackendWeb.PizzaControllerTest do
       conn = post(conn, "/api/pizza", valid_input)
       assert @create_pizza_duplicate_fail_response === json_response(conn, 400)
     end
+  end
 
-    test "a user may delete a pizza", %{conn: conn, topping_ids: topping_ids} do
+  describe "DELETE /api/pizza/:id" do
+    test "user may delete a pizza", %{conn: conn, topping_ids: topping_ids} do
       conn = post(conn, "/api/login", @admin_user_input)
       valid_input = Map.put(@valid_input, :topping_ids, topping_ids)
       conn = post(conn, "/api/pizza", valid_input)

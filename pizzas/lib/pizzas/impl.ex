@@ -1,11 +1,11 @@
 defmodule Pizzas.Impl do
   @moduledoc """
-  Documentation for Pizzas.Impl.
+    Documentation for Pizzas.Impl.
   """
   import Ecto.Query
   alias Ecto.Changeset
   alias Dbstore.Repo
-  alias Dbstore.{Pizza, Toppings, PizzaTopping}
+  alias Dbstore.{Pizza, Topping, PizzaTopping}
 
   # Permissions
   @pizza_application_maker "PIZZA_APPLICATION_MAKER"
@@ -22,7 +22,6 @@ defmodule Pizzas.Impl do
 
   # TODO:
   # - Implement list pizzas final thing.
-  # - csrf endpoint ill-advised?
   # - Then refactor. Auth module, and service functions to be cleaner. (Will do this after Frontend is done.)
   # - Tests could be improved by testing that roles which do not have permission to perform an action
   #   receive the correct response. Later.
@@ -107,7 +106,7 @@ defmodule Pizzas.Impl do
         |> format_response(:delete_pizza)
 
       {:error, response} ->
-          {:error, response}
+        {:error, response}
     end
   end
 
@@ -116,8 +115,8 @@ defmodule Pizzas.Impl do
     # And move the general case stuff out into a separate function.
     case @create_topping |> valid_permission?(@permissions, permission) do
       :ok ->
-        %Toppings{}
-          |> Toppings.changeset(%{name: name})
+        %Topping{}
+          |> Topping.changeset(%{name: name})
           |> Repo.insert()
           |> handle_creation_result()
           |> format_response(:create_topping)
@@ -137,8 +136,19 @@ defmodule Pizzas.Impl do
   end
 
   def delete_topping(permission, id) do
+    {id, _} = Integer.parse(id)
     case @delete_topping |> valid_permission?(@permissions, permission) do
       :ok ->
+        # NOTE:
+        # Want to know why the cascade delete attempts
+        # to lookup the pizza_toppings by toppings_id
+        # rather than topping_id (as it's listed as topping_id
+        # in the migration file)
+        # Repo.get(Toppings, id)
+        # |> IO.inspect()
+        # |> Repo.delete()
+        # |> format_response(:delete_toppings)
+        # old impl
         from(t in "toppings", where: t.id == ^id) |> Repo.delete_all()
       {:error, response} ->
         {:error, response}
@@ -202,11 +212,22 @@ defmodule Pizzas.Impl do
 
   def retrieve_pizza_by_name(name), do: Repo.get!(Pizza, name)
 
-  def retrieve_pizzas, do: Repo.all(Pizza)
+  @doc """
+    # This would execute two database queries
+    # Pizza |> Repo.all() |> Repo.preload(:toppings)
 
-  def retrieve_topping_by_id(id), do: Repo.get!(Toppings, id)
+    # The code in the body of retrieve_pizzas executes only one db query
+  """
+  def retrieve_pizzas do
+    from(p in Pizza,
+      join: t in assoc(p, :toppings),
+      preload: [toppings: t]
+    ) |> Repo.all()
+  end
 
-  def retrieve_toppings, do: Repo.all(Toppings)
+  def retrieve_topping_by_id(id), do: Repo.get!(Topping, id)
+
+  def retrieve_toppings, do: Repo.all(Topping)
 
 
   @doc """
@@ -233,7 +254,7 @@ defmodule Pizzas.Impl do
   ## PRIVATES ##
   ##############
   defp handle_creation_result({:ok, pizza = %Pizza{id: id, name: name}}), do: {:ok, id}
-  defp handle_creation_result({:ok, topping = %Toppings{id: id, name: name}}), do: {:ok, id}
+  defp handle_creation_result({:ok, topping = %Topping{id: id, name: name}}), do: {:ok, id}
 
   @doc """
     errors as it appears in the changeset as the second param to this function:
@@ -283,6 +304,16 @@ defmodule Pizzas.Impl do
       payload: %{
         message: "Pizza successfully deleted!",
         deleted_pizza: %{id: id, name: name}
+      }
+    }}
+  end
+
+  defp format_response({:ok, %{id: id, name: name}}, :delete_toppings) do
+    {:ok, %{
+      status: 200,
+      payload: %{
+        message: "Topping successfully deleted!",
+        deleted_topping: %{id: id, name: name}
       }
     }}
   end

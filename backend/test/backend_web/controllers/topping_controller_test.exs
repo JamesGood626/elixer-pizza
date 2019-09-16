@@ -99,12 +99,15 @@ defmodule BackendWeb.ToppingControllerTest do
     end
   end
 
-  describe "POST /api/toppings/delete" do
-    test "deletes the topping of a given id", %{conn: conn} do
+  describe "DELETE /api/toppings/:id" do
+    test "user may delete a topping", %{conn: conn} do
       conn = post(conn, "/api/login", @admin_user_input)
       conn = post(conn, "/api/toppings", @topping_one_input)
       %{"data" => %{"topping_id" => id}} = json_response(conn, 201)
-      conn = post(conn, "/api/toppings/delete", %{id: id})
+      IO.puts("the topping id")
+      IO.inspect(id)
+      conn = delete(conn, "/api/toppings/#{id}")
+        # post(conn, "/api/toppings/delete", %{id: id})
       assert @delete_topping_success_response === json_response(conn, 200)
     end
   end

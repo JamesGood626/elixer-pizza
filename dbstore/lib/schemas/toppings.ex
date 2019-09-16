@@ -1,4 +1,4 @@
-defmodule Dbstore.Toppings do
+defmodule Dbstore.Topping do
   use Ecto.Schema
   import Ecto.Changeset
 

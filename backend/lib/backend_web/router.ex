@@ -4,7 +4,7 @@ defmodule BackendWeb.Router do
   pipeline :api do
     plug(:accepts, ["json"])
     plug(:fetch_session)
-    # plug(:protect_from_forgery)
+    plug(:protect_from_forgery)
     plug(:put_secure_browser_headers)
   end
 
@@ -20,11 +20,11 @@ defmodule BackendWeb.Router do
 
     # PizzaControllers
     post("/pizza", PizzaController, :create_pizza)
-    # get("/pizza", PizzaController, :list_pizza)
-    delete("/pizza/:id", PizzaController, :delete_pizza)
-    post("/pizza/toppings", PizzaController, :add_toppings)
-    get("/toppings", ToppingController, :list_toppings)
     post("/toppings", ToppingController, :create_topping)
-    post("/toppings/delete", ToppingController, :delete_topping)
+    get("/toppings", ToppingController, :list_toppings)
+    # get("/pizza", PizzaController, :list_pizza)
+    post("/pizza/toppings", PizzaController, :add_toppings)
+    delete("/pizza/:id", PizzaController, :delete_pizza)
+    delete("/toppings/:id", ToppingController, :delete_topping)
   end
 end

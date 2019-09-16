@@ -40,7 +40,7 @@ defmodule BackendWeb.PizzaController do
   @delete_pizza_success_response %{
     status: 200,
     payload: %{
-      # deleted_pizza is also a key, a map containing id and name
+      # deleted_pizza is also a key on this payload, a map containing id and name
       message: "Pizza successfully deleted!"
     }
   }

@@ -1,7 +1,7 @@
 defmodule PizzasImplTest do
   use ExUnit.Case, async: true
   import Ecto.Query
-  alias Dbstore.{Repo, Pizza, Toppings, PizzaToppings}
+  alias Dbstore.{Repo, Pizza, Topping, PizzaToppings}
   alias Pizzas
 
   # Responses
@@ -28,9 +28,9 @@ defmodule PizzasImplTest do
   }}
 
   setup_all do
-    Repo.insert(%Toppings{name: "Pineapple"})
-    Repo.insert(%Toppings{name: "Sausage"})
-    Repo.insert(%Toppings{name: "Jalapenos"})
+    Repo.insert(%Topping{name: "Pineapple"})
+    Repo.insert(%Topping{name: "Sausage"})
+    Repo.insert(%Topping{name: "Jalapenos"})
 
     # handles clean up after all tests have run
     on_exit(fn ->
@@ -59,6 +59,9 @@ defmodule PizzasImplTest do
     Pizzas.create_pizza_with_toppings("PIZZA_CHEF", "Veggie", topping_id_list)
     pizzas = Pizzas.retrieve_pizzas()
     assert length(pizzas) === 3
+    assert length(Enum.at(pizzas, 0).toppings) === 3
+    assert length(Enum.at(pizzas, 1).toppings) === 3
+    assert length(Enum.at(pizzas, 2).toppings) === 3
   end
 
   test "creates a pizza", %{toppings_id_list: topping_id_list} do
@@ -74,14 +77,14 @@ defmodule PizzasImplTest do
 
   test "creates a topping" do
     {:ok, %{ payload: %{ topping_id: id } } } = Pizzas.create_topping("PIZZA_OPERATION_MANAGER", "Olives")
-    assert %Dbstore.Toppings{name: "Olives"} = Pizzas.retrieve_topping_by_id(id)
+    assert %Dbstore.Topping{name: "Olives"} = Pizzas.retrieve_topping_by_id(id)
   end
 
   test "retrieves a list of all toppings" do
     assert [
-      %Dbstore.Toppings{name: "Pineapple"},
-      %Dbstore.Toppings{name: "Sausage"},
-      %Dbstore.Toppings{name: "Jalapenos"}
+      %Dbstore.Topping{name: "Pineapple"},
+      %Dbstore.Topping{name: "Sausage"},
+      %Dbstore.Topping{name: "Jalapenos"}
     ] = Pizzas.retrieve_toppings()
   end
 
