@@ -1,4 +1,5 @@
 defmodule Dbstore.Pizza do
+  @derive {Jason.Encoder, only: [:name, :toppings]}
   use Ecto.Schema
   import Ecto.Changeset
 

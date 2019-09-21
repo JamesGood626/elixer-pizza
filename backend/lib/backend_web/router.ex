@@ -1,6 +1,12 @@
 defmodule BackendWeb.Router do
   use BackendWeb, :router
 
+  # TODO:
+  # See what I need to do to avoid having
+  # to login in every single test block.
+  # i.e. how to persist the session amongst all
+  # the conns.
+
   pipeline :api do
     plug(:accepts, ["json"])
     plug(:fetch_session)
@@ -22,7 +28,7 @@ defmodule BackendWeb.Router do
     post("/pizza", PizzaController, :create_pizza)
     post("/toppings", ToppingController, :create_topping)
     get("/toppings", ToppingController, :list_toppings)
-    # get("/pizza", PizzaController, :list_pizza)
+    get("/pizza/list", PizzaController, :list_pizzas)
     post("/pizza/toppings", PizzaController, :add_toppings)
     delete("/pizza/:id", PizzaController, :delete_pizza)
     delete("/toppings/:id", ToppingController, :delete_topping)

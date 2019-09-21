@@ -14,6 +14,7 @@ defmodule Pizzas.Impl do
 
   # Actions
   @create_pizza "CREATE_PIZZA"
+  @create_topping "CREATE_TOPPING"
   @add_toppings "ADD_TOPPINGS"
   @list_pizzas "LIST_PIZZAS"
   @delete_pizza "DELETE_PIZZA"
@@ -168,6 +169,33 @@ defmodule Pizzas.Impl do
     end
   end
 
+  # COMEBACK
+  def list_pizzas(permission) do
+    IO.puts("the user permission")
+    IO.inspect(permission)
+    case @list_pizzas |> valid_permission?(@permissions, permission) do
+      :ok ->
+        # TODO: Really should have some kind of error handling surrounding the
+        # retrieve_pizza_list op...
+        retrieve_pizza_list() |> format_list_pizzas_response
+
+      {:error, response} ->
+        {:error, response}
+    end
+  end
+
+  # This was thrown together last minute... Really could have
+  # Should really create a format_response function clause for this case.
+  defp format_list_pizzas_response(pizza_list) do
+    {:ok, %{
+      payload: %{
+        pizza_list: pizza_list,
+        message: "Pizza list successfully fetched!"
+      },
+      status: 200
+    }}
+  end
+
   def create_pizza_toppings({:error, message}, _), do: {:error, %{payload: %{message: message}, status: 400}}
 
   @doc """
@@ -216,9 +244,9 @@ defmodule Pizzas.Impl do
     # This would execute two database queries
     # Pizza |> Repo.all() |> Repo.preload(:toppings)
 
-    # The code in the body of retrieve_pizzas executes only one db query
+    # The code in the body of retrieve_pizza_list executes only one db query
   """
-  def retrieve_pizzas do
+  def retrieve_pizza_list do
     from(p in Pizza,
       join: t in assoc(p, :toppings),
       preload: [toppings: t]

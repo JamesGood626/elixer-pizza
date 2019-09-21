@@ -1,7 +1,6 @@
 defmodule BackendWeb.PizzaController do
   use BackendWeb, :controller
   import Backend.AuthPlug
-  import Plug
   alias Backend.Helpers
   alias Pizzas
   alias Accounts
@@ -36,6 +35,16 @@ defmodule BackendWeb.PizzaController do
       }
     }
   }
+
+  @list_pizza_success_response %{
+    payload: %{
+      # key of data which contains value of the fetched list of
+      # pizzas is also on this response.
+      message: "Pizza list successfully fetched!"
+    },
+    status: 200
+  }
+
 
   @delete_pizza_success_response %{
     status: 200,
@@ -102,6 +111,21 @@ defmodule BackendWeb.PizzaController do
             _ -> %{status: 400, payload: %{message: "Whoops, something went wrong."}}
           end
     conn |> Helpers.send_client_response(status, payload)
+  end
+
+  def list_pizzas(conn, _params) do
+    %{current_user: current_user} = conn.assigns
+    %{status: status, payload: payload} =
+      with {user_id, permission} <- Accounts.retrieve_user_with_permission(current_user),
+            {:ok, response = @list_pizza_success_response} <- Pizzas.list_pizzas(permission)
+      do
+        response
+      else
+        {:error, response = @permission_denied_response} -> response
+        _ -> %{status: 400, payload: %{message: "Whoops, something went wrong."}}
+      end
+
+      conn |> Helpers.send_client_response(status, payload)
   end
 
   def delete_pizza(conn = %Plug.Conn{params: %{"id" => pizza_id}}, _) do

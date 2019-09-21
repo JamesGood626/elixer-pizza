@@ -49,7 +49,7 @@ defmodule PizzasImplTest do
 
   test "create new pizza", %{toppings_id_list: topping_id_list} do
     Pizzas.create_pizza_with_toppings("PIZZA_CHEF", "Supreme", topping_id_list)
-    [pizza] = Pizzas.retrieve_pizzas()
+    [pizza] = Pizzas.retrieve_pizza_list()
     assert "Supreme" === pizza.name
   end
 
@@ -57,7 +57,7 @@ defmodule PizzasImplTest do
     Pizzas.create_pizza_with_toppings("PIZZA_CHEF", "Cheese", topping_id_list)
     Pizzas.create_pizza_with_toppings("PIZZA_CHEF", "Nacho", topping_id_list)
     Pizzas.create_pizza_with_toppings("PIZZA_CHEF", "Veggie", topping_id_list)
-    pizzas = Pizzas.retrieve_pizzas()
+    pizzas = Pizzas.retrieve_pizza_list()
     assert length(pizzas) === 3
     assert length(Enum.at(pizzas, 0).toppings) === 3
     assert length(Enum.at(pizzas, 1).toppings) === 3

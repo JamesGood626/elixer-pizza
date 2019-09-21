@@ -8,6 +8,10 @@ defmodule BackendWeb.PizzaControllerTest do
     name: "Pepperoni Pineapple"
   }
 
+  @valid_input_two %{
+    name: "Eggplant paramesan"
+  }
+
   @admin_user_input %{
     username: "boss_user",
     password: "boss_password"
@@ -17,6 +21,18 @@ defmodule BackendWeb.PizzaControllerTest do
     username: "user_one",
     password: "user_one_password"
   }
+
+  @pizza_list_result [
+    %{
+      "name" => "Pepperoni Pineapple",
+      "toppings" => [%{"name" => "Pineapples"}]
+    },
+    %{
+      "name" => "Eggplant paramesan",
+      "toppings" => [%{"name" => "Pineapples"}]
+    }
+  ]
+
 
   @create_pizza_success_response %{
     "data" => %{
@@ -32,12 +48,20 @@ defmodule BackendWeb.PizzaControllerTest do
     }
   }
 
+  @list_pizza_success_response %{
+    "data" => %{
+      "pizza_list" => @pizza_list_result,
+      "message" => "Pizza list successfully fetched!"
+    }
+  }
+
   # "setup_all" is called once per module before any test runs
   setup_all do
     Repo.insert(%Permissions{name: "PIZZA_APPLICATION_MAKER"})
     Repo.insert(%Permissions{name: "PIZZA_OPERATION_MANAGER"})
     Repo.insert(%Permissions{name: "PIZZA_CHEF"})
-    Repo.insert(%{name: "Pineapple"})
+    Repo.insert(%Topping{name: "Pineapples"})
+    Repo.insert(%Topping{name: "Sardines"})
     # Designated Admin
     Accounts.signup_pizza_app_maker(@admin_user_input)
 
@@ -49,6 +73,8 @@ defmodule BackendWeb.PizzaControllerTest do
       Repo.delete_all("toppings")
     end)
 
+    # TODO: Should create a helper function to get a list of all the created
+    # toppings, just to ensure that the toppings are fetched in the list pizza test.
     [%Topping{id: id} | _] = Pizzas.retrieve_toppings()
     {:ok, %{topping_ids: [id]}}
   end
@@ -76,6 +102,19 @@ defmodule BackendWeb.PizzaControllerTest do
       conn = post(conn, "/api/pizza", valid_input)
       conn = post(conn, "/api/pizza", valid_input)
       assert @create_pizza_duplicate_fail_response === json_response(conn, 400)
+    end
+  end
+
+  describe "GET /api/pizza/list" do
+    test "user may retrieve list a of pizzas", %{conn: conn, topping_ids: topping_ids} do
+      conn = post(conn, "/api/login", @admin_user_input)
+      valid_input = Map.put(@valid_input, :topping_ids, topping_ids)
+      valid_input_two = Map.put(@valid_input_two, :topping_ids, topping_ids)
+      conn = post(conn, "/api/pizza", valid_input)
+      conn = post(conn, "/api/pizza", valid_input_two)
+      conn = get(conn, "/api/pizza/list")
+      assert response = json_response(conn, 200)
+      assert response === @list_pizza_success_response
     end
   end
 

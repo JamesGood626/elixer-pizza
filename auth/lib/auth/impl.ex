@@ -56,7 +56,7 @@ defmodule Auth.Impl do
   end
 
   # Handling the failure case of hash_remember_token/2
-  defp generate_session_data({:error, msg}), do: {:error, msg}
+  defp generate_session_data({:error, msg}, _), do: {:error, msg}
 
   defp generate_expiry_time(session_data) do
     expiry =

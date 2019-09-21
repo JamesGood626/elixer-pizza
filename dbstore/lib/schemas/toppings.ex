@@ -1,4 +1,5 @@
 defmodule Dbstore.Topping do
+  @derive {Jason.Encoder, only: [:name]}
   use Ecto.Schema
   import Ecto.Changeset
 

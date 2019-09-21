@@ -68,6 +68,8 @@ defmodule BackendWeb.ToppingController do
     %{current_user: current_user} = conn.assigns
     %{status: status, payload: payload} =
       with {_user_id, permission} <- Accounts.retrieve_user_with_permission(current_user),
+            # Something I would change is to create a better response (human readable) for this,
+            # rather than the standard elixir function's return value.
            {1, _} = Pizzas.delete_topping(permission, id)
         do
           %{status: 200, payload: %{message: "Topping successfully deleted"}}

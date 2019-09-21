@@ -1,6 +1,6 @@
 defmodule BackendWeb.ToppingControllerTest do
   use BackendWeb.ConnCase
-  alias Dbstore.{Repo, Permissions, Toppings}
+  alias Dbstore.{Repo, Permissions, Topping}
   alias Accounts
   alias Pizzas
 
@@ -52,7 +52,6 @@ defmodule BackendWeb.ToppingControllerTest do
     Repo.insert(%Permissions{name: "PIZZA_APPLICATION_MAKER"})
     Repo.insert(%Permissions{name: "PIZZA_OPERATION_MANAGER"})
     Repo.insert(%Permissions{name: "PIZZA_CHEF"})
-    # Repo.insert(%Toppings{name: "Pineapple"})
     # Designated Admin
     Accounts.signup_pizza_app_maker(@admin_user_input)
 
@@ -78,7 +77,7 @@ defmodule BackendWeb.ToppingControllerTest do
       conn = post(conn, "/api/toppings", @topping_one_input)
       %{"data" => %{"topping_id" => id}} = json_response(conn, 201)
       assert @create_topping_success_response = json_response(conn, 201)
-      assert %Dbstore.Toppings{name: "Maple Syrup"} = Pizzas.retrieve_topping_by_id(id)
+      assert %Dbstore.Topping{name: "Maple Syrup"} = Pizzas.retrieve_topping_by_id(id)
     end
 
     test "topping creation fails if name is already taken", %{conn: conn} do
@@ -104,10 +103,7 @@ defmodule BackendWeb.ToppingControllerTest do
       conn = post(conn, "/api/login", @admin_user_input)
       conn = post(conn, "/api/toppings", @topping_one_input)
       %{"data" => %{"topping_id" => id}} = json_response(conn, 201)
-      IO.puts("the topping id")
-      IO.inspect(id)
       conn = delete(conn, "/api/toppings/#{id}")
-        # post(conn, "/api/toppings/delete", %{id: id})
       assert @delete_topping_success_response === json_response(conn, 200)
     end
   end

@@ -28,7 +28,8 @@ defmodule BackendWeb.UserController do
 
     # body_params and params still contain the username and password
     # that was sent on the request... AFTER the client receives the response.
-    # Is this bad?
+    # Is this bad? As long as communication between client and server is encrypted...
+    # it really shouldn't be a problem. Still curious.
     # lines 27 and 28 clear them:
     # conn = Map.put(conn, :body_params, %{})
     # conn = Map.put(conn, :params, %{})
